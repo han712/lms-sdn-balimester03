@@ -1,24 +1,40 @@
+# General
 *.log
 .DS_Store
+npm-debug.log
+yarn-error.log
+.phpactor.json
+.phpunit.result.cache
+
+# Environments
 .env
 .env.backup
 .env.production
-.phpactor.json
-.phpunit.result.cache
+
+# IDE & Editor Directories
 /.fleet
 /.idea
 /.nova
 /.phpunit.cache
 /.vscode
 /.zed
-/auth.json
+
+# Dependencies
+/vendor/
 /node_modules
+
+# Laravel 4 specific
+bootstrap/compiled.php
+app/storage/
+
+# Laravel 5 & Lumen specific
+public/storage
+public/hot
 /public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
-Thumbs.db
+
+# Laravel 5 & Lumen specific with changed public path
+public_html/storage
+public_html/hot
+
+# Other
+/auth.json
