@@ -3,13 +3,14 @@ import {
     BsHouse,
     BsBook,
     BsPeople,
-    BsMortarboard,
     BsChevronDown,
-    BsChevronUp
+    BsChevronUp,
+    BsQuestionCircle
 } from "react-icons/bs";
 
 export default function Sidebar() {
     const [openSiswa, setOpenSiswa] = useState(false);
+    const [openLms, setOpenLms] = useState(false);
 
     return (
         <div
@@ -20,7 +21,7 @@ export default function Sidebar() {
                 minHeight: "100vh"
             }}
         >
-            {/* Profile Section */}
+            {/* Profile */}
             <div className="text-center mb-4">
                 <div
                     className="rounded-circle mx-auto mb-2"
@@ -41,6 +42,7 @@ export default function Sidebar() {
                     </a>
                 </li>
 
+                {/* Siswa */}
                 <li className="nav-item">
                     <div
                         onClick={() => setOpenSiswa(!openSiswa)}
@@ -63,15 +65,44 @@ export default function Sidebar() {
                     )}
                 </li>
 
+                {/* LMS */}
                 <li className="nav-item">
-                    <a href="#/lms" className="text-white text-decoration-none d-flex align-items-center gap-2 p-2 rounded hover-bg">
-                        <BsBook /> LMS
+                    <div
+                        onClick={() => setOpenLms(!openLms)}
+                        style={{ cursor: "pointer" }}
+                        className="text-white d-flex align-items-center gap-2 p-2 rounded justify-content-between hover-bg"
+                    >
+                        <span><BsBook /> LMS</span>
+                        {openLms ? <BsChevronUp /> : <BsChevronDown />}
+                    </div>
+
+                    {openLms && (
+                        <ul className="ms-4 nav flex-column">
+                            <li className="nav-item mt-2">
+                                <a href="#/e-materi" className="text-white text-decoration-none">E-Materi</a>
+                            </li>
+                            <li className="nav-item mt-1">
+                                <a href="#/data-tugas" className="text-white text-decoration-none">Data Tugas</a>
+                            </li>
+                        </ul>
+                    )}
+                </li>
+
+                <li className="nav-item">
+                    <a href="#/mata-pelajaran" className="text-white text-decoration-none d-flex align-items-center gap-2 p-2 rounded hover-bg">
+                        <BsBook /> Mata Pelajaran
                     </a>
                 </li>
 
                 <li className="nav-item">
                     <a href="#/guru" className="text-white text-decoration-none d-flex align-items-center gap-2 p-2 rounded hover-bg">
-                        <BsMortarboard /> Guru & Staff
+                        <BsPeople /> Guru & Staff
+                    </a>
+                </li>
+
+                <li className="nav-item">
+                    <a href="#/bantuan" className="text-white text-decoration-none d-flex align-items-center gap-2 p-2 rounded hover-bg">
+                        <BsQuestionCircle /> Bantuan
                     </a>
                 </li>
             </ul>

@@ -68,7 +68,7 @@ export default function GuruStaffPage() {
     ];
 
     return (
-        <div className="main-content">
+        <>
             <h4 className="mb-3">Guru & Staff</h4>
 
             <div className="d-flex flex-wrap gap-4">
@@ -76,6 +76,6 @@ export default function GuruStaffPage() {
                     <GuruCard key={index} guru={guru} />
                 ))}
             </div>
-        </div>
+        </>
     );
 }

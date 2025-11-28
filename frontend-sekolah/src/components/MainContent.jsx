@@ -5,6 +5,8 @@ import Dashboard from "../pages/Dashboard";
 import GuruStaffPage from "../pages/GuruStaffPage";
 import DataSiswaPage from "../pages/DataSiswaPage";
 import AbsensiSiswaPage from "../pages/AbsensiSiswaPage";
+import EMateriPage from "../pages/EMateriPage";
+import MataPelajaranPage from "../pages/MataPelajaranPage";
 
 export default function MainContent() {
     const [page, setPage] = useState(window.location.hash || "#/dashboard");
@@ -20,13 +22,15 @@ export default function MainContent() {
             className="p-4"
             style={{
                 backgroundColor: "#EFF0FF",
-                minHeight: "100%", // Perubahan di sini
+                minHeight: "calc(100vh - 60px)",
             }}
         >
             {page === "#/dashboard" && <Dashboard />}
             {page === "#/guru" && <GuruStaffPage />}
             {page === "#/siswa" && <DataSiswaPage />}
             {page === "#/absensi-siswa" && <AbsensiSiswaPage />}
+            {page === "#/e-materi" && <EMateriPage />}
+            {page === "#/mata-pelajaran" && <MataPelajaranPage />}
         </div>
     );
 }

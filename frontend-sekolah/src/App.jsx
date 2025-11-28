@@ -11,9 +11,12 @@ function App() {
             <Sidebar />
 
             {/* Area kanan: Navbar + Content */}
-            <div className="flex-grow-1 d-flex flex-column" style={{ backgroundColor: "#EFF0FF" }}>
+            <div
+                className="flex-grow-1 d-flex flex-column"
+                style={{ backgroundColor: "#EFF0FF", minHeight: "100vh" }}
+            >
                 <Navbar />
-                
+
                 {/* Konten Scrollable */}
                 <div className="flex-grow-1 overflow-auto">
                     <MainContent />
