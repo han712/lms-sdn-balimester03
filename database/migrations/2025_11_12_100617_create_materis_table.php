@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('materi', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('guru_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('guru_id')
+                ->constrained('users')
+                ->onDelete('cascade');
             $table->string('judul');
-            $table->text('keterangan')->nullable();
+            $table->longText('keterangan')->nullable();
             $table->enum('tipe', ['materi', 'kuis'])->default('materi');
             $table->string('file')->nullable();
             $table->string('link', 500)->nullable();
@@ -27,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            // Indexes
+            // Indexes untuk performance
             $table->index('guru_id');
             $table->index('tipe');
             $table->index('kelas');

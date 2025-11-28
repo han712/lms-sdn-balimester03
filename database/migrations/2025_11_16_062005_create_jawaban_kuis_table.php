@@ -13,17 +13,26 @@ return new class extends Migration
     {
         Schema::create('jawaban_kuis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('materi_id')->constrained('materi')->onDelete('cascade');
-            $table->foreignId('siswa_id')->constrained('users')->onDelete('cascade');
-            $table->text('jawaban')->nullable();
+            $table->foreignId('materi_id')
+                ->constrained('materi')
+                ->onDelete('cascade');
+            $table->foreignId('siswa_id')
+                ->constrained('users')
+                ->onDelete('cascade');
+            $table->longText('jawaban')->nullable();
             $table->integer('nilai')->nullable();
             $table->text('catatan_guru')->nullable();
             $table->timestamp('dinilai_pada')->nullable();
-            $table->foreignId('dinilai_oleh')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('dinilai_oleh')
+                ->nullable()
+                ->constrained('users')
+                ->onDelete('set null');
             $table->timestamps();
-
+            
+            // Unique constraint
             $table->unique(['materi_id', 'siswa_id']);
-
+            
+            // Indexes
             $table->index('materi_id');
             $table->index('siswa_id');
             $table->index('nilai');
