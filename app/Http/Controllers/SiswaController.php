@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/SiswaController.php
 
 namespace App\Http\Controllers;
 
@@ -27,8 +28,8 @@ class SiswaController extends Controller
         // Filter by tipe
         if ($request->filled('tipe')) {
             $query->where('tipe', $request->tipe);
-        }  
-        
+        }
+
         // Search
         if ($request->filled('search')) {
             $query->where('judul', 'like', "%{$request->search}%");
