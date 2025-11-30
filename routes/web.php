@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Guru\GuruController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -85,7 +86,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])
     ->prefix('guru')
     ->name('guru.')
     ->group(function () {
-        
+        Route::get('/dashboard', [GuruController::class, 'index'])->name('dashboard');
         // Materi Management - CRUD Complete
         Route::resource('materi', GuruController::class);
         

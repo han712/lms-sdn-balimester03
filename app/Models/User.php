@@ -12,11 +12,6 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -29,29 +24,21 @@ class User extends Authenticatable
         'last_activity'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean', // Casting boolean agar aman
         ];
     }
 
+    // --- Helper Methods ---
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -60,16 +47,32 @@ class User extends Authenticatable
     {
         return $this->role === 'guru';
     }
+    public function isSiswa(): bool 
+    {
+        return $this->role === 'siswa';
+    }
+
+    // --- Relationships ---
+    
+    // [PENTING] Relasi Guru ke Materi buatannya
+    public function materi()
+    {
+        return $this->hasMany(Materi::class, 'guru_id');
+    }
+
     public function absensi(){
         return $this->hasMany(Absensi::class, 'siswa_id');
     }
+    
     public function jawabanKuis(){
         return $this->hasMany(JawabanKuis::class, 'siswa_id');
     }
+    
     public function jawabanYangDinilai(){
         return $this->hasMany(JawabanKuis::class, 'dinilai_oleh');
     }
     
+    // --- Scopes ---
 
      public function scopeActive($query)
     {
@@ -90,6 +93,13 @@ class User extends Authenticatable
     {
         return $query->where('role', 'siswa');
     }
+    
+    // Scope baru untuk mengambil siswa super admin (jika perlu)
+    public function scopeSuperAdmin($query)
+    {
+        // Asumsi super admin adalah admin pertama atau admin yang aktif
+        return $query->where('role', 'admin');
+    }
 
     public function scopeKelas($query, $kelas)
     {
@@ -105,5 +115,4 @@ class User extends Authenticatable
             default => 'Unknown'
         };
     }
-
 }

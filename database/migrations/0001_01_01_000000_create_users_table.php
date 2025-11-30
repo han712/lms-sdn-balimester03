@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            // Di dalam file migration create_users_table.php
+            $table->enum('role', ['admin', 'guru', 'siswa'])->default('siswa');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
