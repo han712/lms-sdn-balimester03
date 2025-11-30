@@ -23,6 +23,7 @@ class DashboardController extends Controller
             'active_users' => User::where('is_active', true)->count(),
             'inactive_users' => User::where('is_active', false)->count(),
             
+
             'total_materi' => Materi::count(),
             'published_materi' => Materi::where('is_published', true)->count(),
             'total_kuis' => Materi::where('tipe', 'kuis')->count(),
@@ -41,7 +42,9 @@ class DashboardController extends Controller
         // Siswa per kelas
         $siswa_per_kelas = [];
         for ($i = 1; $i <= 6; $i++) {
-            $siswa_per_kelas[$i] = User::siswa()->where('kelas', (string)$i)->count();
+            $siswa_per_kelas[$i] = User::siswa()
+                ->where('kelas', (string)$i)
+                ->count();
         }
 
         // Chart data for absensi

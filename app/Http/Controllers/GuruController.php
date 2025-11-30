@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 
 namespace App\Http\Controllers;
 
@@ -636,4 +636,4 @@ class GuruController extends Controller
             return back()->with('error', 'Gagal menilai jawaban: ' . $e->getMessage());
         }
     }
-}
+} -->

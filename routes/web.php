@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Guru\GuruController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -10,6 +12,7 @@ Route::get('/', function () {
     }
     return redirect()->route('login');
 });
+
 Route::middleware(['auth', 'verified'])->group(function () {
     
     // Dashboard redirect based on role
@@ -42,8 +45,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->group(function () {
         
         // Dashboard
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-        
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');        
         // User Management - CRUD Complete
         Route::resource('users', AdminController::class)->except(['create', 'store']);
         Route::get('users/create', [AdminController::class, 'create'])->name('users.create');
@@ -86,8 +88,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])
     ->prefix('guru')
     ->name('guru.')
     ->group(function () {
-        Route::get('/dashboard', [GuruController::class, 'index'])->name('dashboard');
-        // Materi Management - CRUD Complete
+        Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');        // Materi Management - CRUD Complete
         Route::resource('materi', GuruController::class);
         
         // Materi Actions
