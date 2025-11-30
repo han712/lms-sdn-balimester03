@@ -6,57 +6,48 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-// Jangan lupa import Model yang dibutuhkan
+use Illuminate\Support\Facades\File;
 use App\Models\Materi;
 use App\Models\Absensi;
 use App\Models\JawabanKuis;
+use App\Models\User;
 
 class GuruController extends Controller
 {
+    /**
+     * Dashboard Guru
+     */
     public function index()
     {
         // Ambil ID Guru yang sedang login
         $guruId = Auth::id();
 
-        // 1. STATISTIK UTAMA (Cards)
-        // Kita gunakan query scope / where untuk memastikan data milik guru ini saja
+        // Statistik utama
         $stats = [
             'total_materi' => Materi::where('guru_id', $guruId)->count(),
-            
-            'published_materi' => Materi::where('guru_id', $guruId)
-                ->where('is_published', true)->count(),
-                
-            'draft_materi' => Materi::where('guru_id', $guruId)
-                ->where('is_published', false)->count(),
-                
-            'total_kuis' => Materi::where('guru_id', $guruId)
-                ->where('tipe', 'kuis')->count(),
-            
-            // Hitung absensi hanya pada materi milik guru ini
+            'published_materi' => Materi::where('guru_id', $guruId)->where('is_published', true)->count(),
+            'draft_materi' => Materi::where('guru_id', $guruId)->where('is_published', false)->count(),
+            'total_kuis' => Materi::where('guru_id', $guruId)->where('tipe', 'kuis')->count(),
             'total_absensi' => Absensi::whereHas('materi', function($q) use ($guruId) {
                 $q->where('guru_id', $guruId);
             })->count(),
-
-            // Hitung jawaban kuis pada materi milik guru ini
             'total_jawaban' => JawabanKuis::whereHas('materi', function($q) use ($guruId) {
                 $q->where('guru_id', $guruId);
             })->count(),
-            
             'jawaban_belum_dinilai' => JawabanKuis::whereHas('materi', function($q) use ($guruId) {
                 $q->where('guru_id', $guruId);
             })->whereNull('nilai')->count(),
         ];
 
-        // 2. DATA UNTUK GRAFIK (Materi per Kelas)
-        // Hasilnya array: ['1' => 5, '2' => 3, ...]
+        // Data grafik (Materi per Kelas)
         $materi_per_kelas = Materi::where('guru_id', $guruId)
             ->select('kelas', DB::raw('count(*) as total'))
             ->groupBy('kelas')
             ->pluck('total', 'kelas')
             ->toArray();
 
-        // 3. DAFTAR KUIS YANG PERLU DINILAI (Pending Review)
-        $kuis_pending = JawabanKuis::with(['siswa', 'materi']) // Eager load relasi biar cepat
+        // Kuis yang belum dinilai
+        $kuis_pending = JawabanKuis::with(['siswa', 'materi'])
             ->whereHas('materi', function($q) use ($guruId) {
                 $q->where('guru_id', $guruId);
             })
@@ -65,22 +56,21 @@ class GuruController extends Controller
             ->take(5)
             ->get();
 
-        // 4. MATERI TERBARU (Recent Activity)
+        // Materi terbaru
         $recent_materi = Materi::where('guru_id', $guruId)
             ->latest()
             ->take(5)
             ->get();
 
-        // 5. ABSENSI TERBARU
+        // Absensi terbaru
         $recent_absensi = Absensi::with(['siswa', 'materi'])
             ->whereHas('materi', function($q) use ($guruId) {
                 $q->where('guru_id', $guruId);
             })
-            ->latest('waktu_akses') // Pastikan nama kolom timestamp-nya benar
+            ->latest('waktu_akses')
             ->take(5)
             ->get();
 
-        // Kirim semua variabel ke View
         return view('guru.dashboard', compact(
             'stats',
             'materi_per_kelas',
@@ -88,5 +78,57 @@ class GuruController extends Controller
             'recent_materi',
             'recent_absensi'
         ));
+    }
+
+    /**
+     * ✅ Halaman Data Guru
+     * Menampilkan semua guru:
+     * - dari database (misalnya Budi)
+     * - dan dari folder public/FotoGuru
+     */
+    public function dataGuru()
+    {
+        // Ambil guru dari database (contohnya Budi)
+        $guruFromDB = User::where('role', 'guru')
+            ->get()
+            ->map(function ($guru) {
+                return (object) [
+                    'name' => $guru->name,
+                    'tempat_lahir' => $guru->tempat_lahir ?? '-',
+                    'tanggal_lahir' => $guru->tanggal_lahir ?? '-',
+                    'agama' => $guru->agama ?? '-',
+                    'nip' => $guru->nip ?? '-',
+                    'mapel' => $guru->mapel ?? '-',
+                    'foto_url' => $guru->foto
+                        ? asset('FotoGuru/' . $guru->foto)
+                        : 'https://via.placeholder.com/400x400?text=Guru',
+                ];
+            });
+
+        // Ambil semua file di folder FotoGuru
+        $path = public_path('FotoGuru');
+        $files = File::exists($path) ? File::files($path) : [];
+
+        // Ambil daftar guru dari folder (nama file)
+        $guruFromFolder = collect($files)->map(function ($file) {
+            $filename = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+
+            return (object) [
+                'name' => $filename,
+                'tempat_lahir' => null,
+                'tanggal_lahir' => null,
+                'agama' => null,
+                'nip' => null,
+                'mapel' => null,
+                'foto_url' => asset('FotoGuru/' . $file->getFilename()),
+            ];
+        });
+
+        // Gabungkan data dari DB + folder (hindari duplikat nama)
+        $guruList = $guruFromDB->merge($guruFromFolder)
+            ->unique('name')
+            ->values();
+
+        return view('guru.data-guru', compact('guruList'));
     }
 }

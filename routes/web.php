@@ -89,6 +89,8 @@ Route::middleware(['auth', 'verified', 'role:guru'])
         Route::get('/dashboard', [GuruController::class, 'index'])->name('dashboard');
         // Materi Management - CRUD Complete
         Route::resource('materi', GuruController::class);
+        // Data Guru & Staff 
+        Route::get('data-guru', [GuruController::class, 'dataGuru'])->name('data-guru');
         
         // Materi Actions
         Route::post('materi/{materi}/toggle-publish', [GuruController::class, 'togglePublish'])
@@ -117,7 +119,11 @@ Route::middleware(['auth', 'verified', 'role:guru'])
             ->name('jawaban-kuis.nilai');
         Route::post('materi/{materi}/jawaban-kuis/bulk-nilai', [GuruController::class, 'bulkNilaiKuis'])
             ->name('materi.jawaban-kuis.bulk-nilai');
-    });
+    
+        
+        });
+
+
 
 /*
 |--------------------------------------------------------------------------
