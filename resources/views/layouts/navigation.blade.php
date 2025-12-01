@@ -32,6 +32,9 @@
                         <x-nav-link :href="route('guru.materi.index')" :active="request()->routeIs('guru.materi.*')">
                             <i class="bi bi-journal-text"></i> Materi & Kuis
                         </x-nav-link>
+                        <x-nav-link :href="route('guru.data-guru')" :active="request()->routeIs('guru.data-guru')">
+                            <i class="bi bi-person-workspace"></i> Data Guru
+                        </x-nav-link>                     
                     @elseif(auth()->user()->role === 'siswa')
                         <x-nav-link :href="route('siswa.dashboard')" :active="request()->routeIs('siswa.dashboard')">
                             <i class="bi bi-speedometer2"></i> Dashboard
