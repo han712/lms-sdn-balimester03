@@ -75,40 +75,75 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('absensi', [AdminController::class, 'allAbsensi'])->name('absensi.index');
     });
 
-// ==========================
-// Guru Routes
-// ==========================
+// Route::middleware(['auth', 'verified', 'role:guru'])
+//     ->prefix('guru')
+//     ->name('guru.')
+//     ->group(function () {
+        // Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');        // Materi Management - CRUD Complete
+        // Route::resource('materi', GuruController::class);
+        
+        // // Materi Actions
+        // Route::post('materi/{materi}/toggle-publish', [GuruController::class, 'togglePublish'])
+        //     ->name('materi.toggle-publish');
+        // Route::post('materi/{materi}/duplicate', [GuruController::class, 'duplicate'])
+        //     ->name('materi.duplicate');
+        
+        // // Bulk Actions for Materi
+        // Route::post('materi/bulk-delete', [GuruController::class, 'bulkDelete'])
+        //     ->name('materi.bulk-delete');
+        
+        // // Absensi Management
+        // Route::get('materi/{materi}/absensi', [GuruController::class, 'absensi'])
+        //     ->name('materi.absensi');
+        // Route::post('materi/{materi}/absensi/update', [GuruController::class, 'updateAbsensi'])
+        //     ->name('materi.absensi.update');
+        // Route::post('materi/{materi}/absensi/bulk-update', [GuruController::class, 'bulkUpdateAbsensi'])
+        //     ->name('materi.absensi.bulk-update');
+        // Route::post('absensi/export', [GuruController::class, 'exportAbsensi'])
+        //     ->name('absensi.export');
+        
+        // // Kuis & Penilaian
+        // Route::get('materi/{materi}/jawaban-kuis', [GuruController::class, 'jawabanKuis'])
+        //     ->name('materi.jawaban-kuis');
+        // Route::post('jawaban-kuis/{jawaban}/nilai', [GuruController::class, 'nilaiKuis'])
+        //     ->name('jawaban-kuis.nilai');
+        // Route::post('materi/{materi}/jawaban-kuis/bulk-nilai', [GuruController::class, 'bulkNilaiKuis'])
+        //     ->name('materi.jawaban-kuis.bulk-nilai');
 Route::middleware(['auth', 'verified', 'role:guru'])
-    ->prefix('guru')
-    ->name('guru.')
-    ->group(function () {
+        ->prefix('guru')
+        ->name('guru.') // Ini memberi awalan nama route 'guru.'
+        ->group(function () {
+        
+        // 1. Dashboard
+        Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');
 
-        // Dashboard
-        Route::get('/dashboard', [GuruController::class, 'index'])->name('dashboard');
-
-        // Materi CRUD
-        Route::get('materi', [GuruController::class, 'materiIndex'])->name('materi.index');
-        Route::get('materi/create', [GuruController::class, 'createMateri'])->name('materi.create');
-        Route::post('materi', [GuruController::class, 'storeMateri'])->name('materi.store');
-        Route::get('materi/{materi}/edit', [GuruController::class, 'editMateri'])->name('materi.edit');
-        Route::put('materi/{materi}', [GuruController::class, 'updateMateri'])->name('materi.update');
-        Route::delete('materi/{materi}', [GuruController::class, 'destroyMateri'])->name('materi.destroy');
-
-        // Materi Actions
-        Route::post('materi/{materi}/toggle-publish', [GuruController::class, 'togglePublish'])->name('materi.toggle-publish');
+        // 2. Materi CRUD (PENTING: Ini yang memperbaiki error kamu)
+        // Fungsi resource ini otomatis membuat route:
+        // guru.materi.index, guru.materi.create, guru.materi.store, dll.
+        // Pastikan menggunakan GuruController::class
+        Route::resource('materi', GuruController::class);
+        
+        // 3. Custom Routes Materi (Duplicate & Publish)
         Route::post('materi/{materi}/duplicate', [GuruController::class, 'duplicate'])->name('materi.duplicate');
+        Route::post('materi/{materi}/toggle-publish', [GuruController::class, 'togglePublish'])->name('materi.toggle-publish');
+        Route::post('materi/bulk-publish', [GuruController::class, 'bulkPublish'])->name('materi.bulk-publish');
         Route::post('materi/bulk-delete', [GuruController::class, 'bulkDelete'])->name('materi.bulk-delete');
 
-        // Absensi Management
+        // 4. Absensi Management
         Route::get('materi/{materi}/absensi', [GuruController::class, 'absensi'])->name('materi.absensi');
-        Route::post('materi/{materi}/absensi/update', [GuruController::class, 'updateAbsensi'])->name('materi.absensi.update');
-        Route::post('materi/{materi}/absensi/bulk-update', [GuruController::class, 'bulkUpdateAbsensi'])->name('materi.absensi.bulk-update');
-        Route::post('absensi/export', [GuruController::class, 'exportAbsensi'])->name('absensi.export');
+        Route::put('materi/{materi}/absensi', [GuruController::class, 'updateAbsensi'])->name('materi.absensi.update');
+        Route::get('laporan/absensi', [GuruController::class, 'exportRekapAbsensi'])->name('laporan.absensi');
 
-        // Kuis & Penilaian
-        Route::get('materi/{materi}/jawaban-kuis', [GuruController::class, 'jawabanKuis'])->name('materi.jawaban-kuis');
-        Route::post('jawaban-kuis/{jawaban}/nilai', [GuruController::class, 'nilaiKuis'])->name('jawaban-kuis.nilai');
-        Route::post('materi/{materi}/jawaban-kuis/bulk-nilai', [GuruController::class, 'bulkNilaiKuis'])->name('materi.jawaban-kuis.bulk-nilai');
+        // 5. Kuis & Penilaian
+        Route::get('materi/{materi}/hasil-kuis', [GuruController::class, 'hasilKuis'])->name('kuis.hasil');
+        Route::get('kuis/{jawaban}/nilai', [GuruController::class, 'detailJawaban'])->name('kuis.detail'); 
+        Route::put('kuis/{jawaban}/nilai', [GuruController::class, 'nilaiJawaban'])->name('kuis.nilai');
+
+        // 6. Profil
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('password', [ProfileController::class, 'updatePassword'])->name('password.update');
+    });
 
         // Data Guru & Staff
         Route::get('data-guru', [GuruController::class, 'dataGuru'])->name('data-guru');
