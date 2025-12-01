@@ -1,48 +1,39 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Kelola Materi') }}
-            </h2>
-            <a href="{{ route('guru.materi.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                + Buat Materi Baru
-            </a>
+@extends('layouts.guru')
+
+@section('title', 'Daftar Materi')
+
+@section('content')
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-book"></i> Daftar Materi
+        </h1>
+        <a href="{{ route('guru.materi.create') }}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-plus"></i> Buat Materi Baru
+        </a>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filter & Pencarian</h6>
         </div>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
-            {{-- Alert Messages --}}
-            @if(session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            {{-- Filter Section --}}
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-6">
-                <div class="p-6">
-                    <form method="GET" action="{{ route('guru.materi.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        
-                        {{-- Search --}}
-                        <div>
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ request('search') }}"
-                                   placeholder="Cari materi..." 
-                                   class="w-full rounded-lg border-gray-300">
+        <div class="card-body">
+            <form action="{{ route('guru.materi.index') }}" method="GET">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Pencarian</label>
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Cari judul atau deskripsi..."
+                                   value="{{ request('search') }}">
                         </div>
-
-                        {{-- Filter Kelas --}}
-                        <div>
-                            <select name="kelas" class="w-full rounded-lg border-gray-300">
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>Kelas</label>
+                            <select name="kelas" class="form-control">
                                 <option value="">Semua Kelas</option>
                                 @for($i = 1; $i <= 6; $i++)
                                     <option value="{{ $i }}" {{ request('kelas') == $i ? 'selected' : '' }}>
@@ -51,146 +42,362 @@
                                 @endfor
                             </select>
                         </div>
-
-                        {{-- Filter Tipe --}}
-                        <div>
-                            <select name="tipe" class="w-full rounded-lg border-gray-300">
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>Tipe</label>
+                            <select name="tipe" class="form-control">
                                 <option value="">Semua Tipe</option>
                                 <option value="materi" {{ request('tipe') == 'materi' ? 'selected' : '' }}>Materi</option>
                                 <option value="kuis" {{ request('tipe') == 'kuis' ? 'selected' : '' }}>Kuis</option>
                             </select>
                         </div>
-
-                        {{-- Filter Status --}}
-                        <div>
-                            <select name="status" class="w-full rounded-lg border-gray-300">
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="status" class="form-control">
                                 <option value="">Semua Status</option>
                                 <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Published</option>
                                 <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                             </select>
                         </div>
-
-                        <div class="md:col-span-4 flex gap-2">
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                🔍 Filter
-                            </button>
-                            <a href="{{ route('guru.materi.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                                Reset
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            {{-- Materi List --}}
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                <div class="p-6">
-                    
-                    @if($materi->count() > 0)
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipe</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dibuat</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach($materi as $item)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center">
-                                                    <div>
-                                                        <div class="font-medium text-gray-900">{{ $item->judul }}</div>
-                                                        <div class="text-sm text-gray-500">{{ Str::limit($item->deskripsi, 50) }}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                    Kelas {{ $item->kelas }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $item->tipe === 'kuis' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' }}">
-                                                    {{ ucfirst($item->tipe) }}
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <form action="{{ route('guru.materi.toggle-publish', $item) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="px-2 py-1 text-xs font-semibold rounded-full {{ $item->is_published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                                        {{ $item->is_published ? '✓ Published' : '○ Draft' }}
-                                                    </button>
-                                                </form>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $item->created_at->diffForHumans() }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div class="flex justify-end gap-2">
-                                                    <a href="{{ route('guru.materi.show', $item) }}" class="text-blue-600 hover:text-blue-900">
-                                                        👁️
-                                                    </a>
-                                                    <a href="{{ route('guru.materi.edit', $item) }}" class="text-indigo-600 hover:text-indigo-900">
-                                                        ✏️
-                                                    </a>
-                                                    
-                                                    @if($item->tipe === 'materi')
-                                                        <a href="{{ route('guru.materi.absensi', $item) }}" class="text-green-600 hover:text-green-900">
-                                                            📋
-                                                        </a>
-                                                    @else
-                                                        <a href="{{ route('guru.materi.jawaban-kuis', $item) }}" class="text-purple-600 hover:text-purple-900">
-                                                            📝
-                                                        </a>
-                                                    @endif
-                                                    
-                                                    <form action="{{ route('guru.materi.destroy', $item) }}" 
-                                                          method="POST" 
-                                                          onsubmit="return confirm('Yakin ingin menghapus materi ini?')"
-                                                          class="inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="text-red-600 hover:text-red-900">
-                                                            🗑️
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- Pagination --}}
-                        <div class="mt-4">
-                            {{ $materi->links() }}
-                        </div>
-
-                    @else
-                        <div class="text-center py-12">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada materi</h3>
-                            <p class="mt-1 text-sm text-gray-500">Mulai dengan membuat materi baru</p>
-                            <div class="mt-6">
-                                <a href="{{ route('guru.materi.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                                    + Buat Materi Baru
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary btn-block">
+                                    <i class="fas fa-search"></i> Filter
+                                </button>
+                                <a href="{{ route('guru.materi.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-redo"></i>
                                 </a>
                             </div>
                         </div>
-                    @endif
+                    </div>
+                </div>
+            </form>
 
+            <!-- Quick Stats -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="d-flex gap-3">
+                        <div class="badge badge-primary badge-pill p-2">
+                            Total: {{ $filterStats['total'] }}
+                        </div>
+                        <div class="badge badge-success badge-pill p-2">
+                            Published: {{ $filterStats['published'] }}
+                        </div>
+                        <div class="badge badge-secondary badge-pill p-2">
+                            Draft: {{ $filterStats['draft'] }}
+                        </div>
+                        <div class="badge badge-info badge-pill p-2">
+                            Materi: {{ $filterStats['materi'] }}
+                        </div>
+                        <div class="badge badge-warning badge-pill p-2">
+                            Kuis: {{ $filterStats['kuis'] }}
+                        </div>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
-</x-app-layout>
+
+    <!-- Bulk Actions -->
+    <div class="card shadow mb-4" id="bulkActionsCard" style="display: none;">
+        <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span id="selectedCount">0</span> materi dipilih
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success btn-sm" onclick="bulkAction('publish')">
+                        <i class="fas fa-check"></i> Publish
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="bulkAction('unpublish')">
+                        <i class="fas fa-minus"></i> Unpublish
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="bulkDelete()">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materi List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                Daftar Materi ({{ $materi->total() }})
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="materiTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th width="30">
+                                <input type="checkbox" id="selectAll">
+                            </th>
+                            <th>Judul</th>
+                            <th width="100">Tipe</th>
+                            <th width="80">Kelas</th>
+                            <th width="100">Status</th>
+                            <th width="120">Statistik</th>
+                            <th width="120">Tanggal</th>
+                            <th width="150">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($materi as $item)
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="checkbox-item" value="{{ $item->id }}">
+                            </td>
+                            <td>
+                                <strong>{{ $item->judul }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ Str::limit($item->deskripsi, 80) }}
+                                </small>
+                                @if($item->file_path)
+                                <br>
+                                <small>
+                                    <i class="fas fa-paperclip text-primary"></i>
+                                    {{ basename($item->file_path) }}
+                                </small>
+                                @endif
+                            </td>
+                            <td>
+                                @if($item->tipe === 'kuis')
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-clipboard-list"></i> Kuis
+                                    </span>
+                                @else
+                                    <span class="badge badge-info">
+                                        <i class="fas fa-book"></i> Materi
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                <span class="badge badge-primary">Kelas {{ $item->kelas }}</span>
+                            </td>
+                            <td>
+                                @if($item->is_published)
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check"></i> Published
+                                    </span>
+                                @else
+                                    <span class="badge badge-secondary">
+                                        <i class="fas fa-clock"></i> Draft
+                                    </span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($item->tipe === 'kuis')
+                                    <small>
+                                        <i class="fas fa-users text-info"></i> {{ $item->jawaban_kuis_count }} Jawaban
+                                        <br>
+                                        <i class="fas fa-exclamation-circle text-warning"></i> 
+                                        {{ $item->jawaban_belum_dinilai_count }} Belum Dinilai
+                                    </small>
+                                @else
+                                    <small>
+                                        <i class="fas fa-user-check text-success"></i> 
+                                        {{ $item->absensi_hadir_count }}/{{ $item->absensi_count }} Hadir
+                                    </small>
+                                @endif
+                            </td>
+                            <td>
+                                <small>{{ $item->created_at->format('d M Y') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ route('guru.materi.show', $item->id) }}" 
+                                       class="btn btn-info" title="Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('guru.materi.edit', $item->id) }}" 
+                                       class="btn btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-secondary" 
+                                            onclick="duplicateMateri({{ $item->id }})" title="Duplikat">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger" 
+                                            onclick="deleteMateri({{ $item->id }})" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Belum ada materi</p>
+                                <a href="{{ route('guru.materi.create') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Buat Materi Baru
+                                </a>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-3">
+                {{ $materi->links() }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Form (Hidden) -->
+<form id="deleteForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
+<!-- Bulk Action Forms -->
+<form id="bulkPublishForm" action="{{ route('guru.materi.bulk-publish') }}" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="action" id="bulkAction">
+    <input type="hidden" name="ids" id="bulkIds">
+</form>
+
+<form id="bulkDeleteForm" action="{{ route('guru.materi.bulk-delete') }}" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="ids" id="bulkDeleteIds">
+</form>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Select All Checkbox
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.checkbox-item');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    updateBulkActions();
+});
+
+// Individual Checkbox
+document.querySelectorAll('.checkbox-item').forEach(cb => {
+    cb.addEventListener('change', updateBulkActions);
+});
+
+function updateBulkActions() {
+    const selected = document.querySelectorAll('.checkbox-item:checked');
+    const bulkCard = document.getElementById('bulkActionsCard');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if (selected.length > 0) {
+        bulkCard.style.display = 'block';
+        selectedCount.textContent = selected.length;
+    } else {
+        bulkCard.style.display = 'none';
+    }
+}
+
+function bulkAction(action) {
+    const selected = Array.from(document.querySelectorAll('.checkbox-item:checked'))
+        .map(cb => cb.value);
+    
+    if (selected.length === 0) {
+        Swal.fire('Peringatan', 'Pilih minimal 1 materi', 'warning');
+        return;
+    }
+    
+    const actionText = action === 'publish' ? 'publish' : 'unpublish';
+    
+    Swal.fire({
+        title: 'Konfirmasi',
+        text: `${actionText} ${selected.length} materi yang dipilih?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('bulkAction').value = action;
+            document.getElementById('bulkIds').value = JSON.stringify(selected);
+            document.getElementById('bulkPublishForm').submit();
+        }
+    });
+}
+
+function bulkDelete() {
+    const selected = Array.from(document.querySelectorAll('.checkbox-item:checked'))
+        .map(cb => cb.value);
+    
+    if (selected.length === 0) {
+        Swal.fire('Peringatan', 'Pilih minimal 1 materi', 'warning');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: `Hapus ${selected.length} materi yang dipilih? Tindakan ini tidak dapat dibatalkan!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('bulkDeleteIds').value = JSON.stringify(selected);
+            document.getElementById('bulkDeleteForm').submit();
+        }
+    });
+}
+
+function deleteMateri(id) {
+    Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: 'Yakin ingin menghapus materi ini?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.getElementById('deleteForm');
+            form.action = `/guru/materi/${id}`;
+            form.submit();
+        }
+    });
+}
+
+function duplicateMateri(id) {
+    Swal.fire({
+        title: 'Duplikat Materi',
+        text: 'Buat salinan dari materi ini?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Duplikat',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/guru/materi/${id}/duplicate`;
+            
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            form.appendChild(csrf);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
+@endpush
+@endsection
