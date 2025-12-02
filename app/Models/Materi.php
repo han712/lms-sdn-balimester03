@@ -24,9 +24,65 @@ class Materi extends Model
 
     protected $casts = [
         'is_published' => 'boolean',
+        'tanggal_deadline' => 'datetime',
+        'views_count' => 'integer',
+        'file_size' => 'integer',
     ];
 
     // --- Relationships ---
+    public function scopePublished($query)
+    {
+        return $query->where('is_published', true);
+    }
+
+    public function scopeDraft($query)
+    {
+        return $query->where('is_published', false);
+    }
+
+    public function scopeByKelas($query, $kelas)
+    {
+        return $query->where('kelas', $kelas);
+    }
+
+    public function scopeByTipe($query, $tipe)
+    {
+        return $query->where('tipe', $tipe);
+    }
+    public function getFileUrlAttribute()
+    {
+        return $this->file_path ? asset('storage/' . $this->file_path) : null;
+    }
+
+    public function getFileSizeFormatAttribute()
+    {
+        if (!$this->file_size) return null;
+        
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $size = $this->file_size;
+        $unit = 0;
+        
+        while ($size >= 1024 && $unit < count($units) - 1) {
+            $size /= 1024;
+            $unit++;
+        }
+        
+        return round($size, 2) . ' ' . $units[$unit];
+    }
+
+    public function getIsOverdueAttribute()
+    {
+        if (!$this->tanggal_deadline) return false;
+        return now()->gt($this->tanggal_deadline);
+    }
+
+    // Add method to increment views
+    public function incrementViews()
+    {
+        $this->increment('views_count');
+    }
+
+
 
     public function guru() 
     { 

@@ -1,241 +1,549 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard Guru') }}
-        </h2>
-    </x-slot>
+{{-- resources/views/guru/dashboard.blade.php --}}
+@extends('layouts.guru')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
-            {{-- Alert Messages --}}
-            @if(session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
+@section('title', 'Dashboard Guru')
 
-            {{-- Statistics Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                
-                {{-- Total Materi --}}
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                                </svg>
+@section('content')
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </h1>
+        <div class="d-flex gap-2">
+            <a href="{{ route('guru.materi.create') }}" class="btn btn-primary btn-sm shadow-sm">
+                <i class="fas fa-plus fa-sm"></i> Buat Materi Baru
+            </a>
+            <a href="{{ route('guru.laporan.absensi') }}" class="btn btn-info btn-sm shadow-sm">
+                <i class="fas fa-download fa-sm"></i> Export Laporan
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistik Cards -->
+    <div class="row">
+        <!-- Total Materi -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Materi
                             </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Total Materi</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ $stats['total_materi'] }}</p>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $stats['total_materi'] }}
                             </div>
+                            <div class="text-xs text-muted mt-1">
+                                <span class="text-success">{{ $stats['published_materi'] }} Published</span> |
+                                <span class="text-warning">{{ $stats['draft_materi'] }} Draft</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
-
-                {{-- Published Materi --}}
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Published</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ $stats['published_materi'] }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Total Kuis --}}
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
-                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Total Kuis</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ $stats['total_kuis'] }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Belum Dinilai --}}
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Perlu Dinilai</p>
-                                <p class="text-2xl font-semibold text-gray-900">{{ $stats['jawaban_belum_dinilai'] }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+        </div>
 
-            {{-- Main Content Grid --}}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {{-- Left Column --}}
-                <div class="lg:col-span-2 space-y-6">
-                    
-                    {{-- Grafik Materi per Kelas --}}
-                    <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                        <div class="p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Materi per Kelas</h3>
-                            <div class="space-y-3">
-                                @foreach(['1', '2', '3', '4', '5', '6'] as $kelas)
-                                    @php
-                                $total = $materi_per_kelas[$kelas] ?? 0;
-                                
-                                
-                                if (!empty($materi_per_kelas)) {
-                                    $maxMateri = max($materi_per_kelas);
-                                } else {
-                                    $maxMateri = 1; // Default kalau belum ada data sama sekali
-                                }
-                                
-                                $percentage = ($total / $maxMateri) * 100;
-                                @endphp
-                                    <div>
-                                        <div class="flex justify-between mb-1">
-                                            <span class="text-sm font-medium text-gray-700">Kelas {{ $kelas }}</span>
-                                            <span class="text-sm font-medium text-gray-900">{{ $total }} materi</span>
-                                        </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $percentage }}%"></div>
-                                        </div>
-                                    </div>
-                                @endforeach
+        <!-- Total Kuis -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Kuis
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $stats['total_kuis'] }}
+                            </div>
+                            <div class="text-xs text-muted mt-1">
+                                <span class="text-warning">{{ $stats['jawaban_belum_dinilai'] }} Belum Dinilai</span>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Recent Materi --}}
-                    <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                        <div class="p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-semibold text-gray-900">Materi Terbaru</h3>
-                                <a href="{{ route('guru.materi.index') }}" class="text-sm text-blue-600 hover:text-blue-800">Lihat Semua</a>
-                            </div>
-                            <div class="space-y-3">
-                                @forelse($recent_materi as $materi)
-                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div class="flex-1">
-                                            <p class="font-medium text-gray-900">{{ $materi->judul }}</p>
-                                            <p class="text-sm text-gray-500">
-                                                Kelas {{ $materi->kelas }} • 
-                                                <span class="capitalize">{{ $materi->tipe }}</span>
-                                            </p>
-                                        </div>
-                                        <div class="flex items-center space-x-2">
-                                            <span class="px-2 py-1 text-xs rounded-full {{ $materi->is_published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                                {{ $materi->is_published ? 'Published' : 'Draft' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <p class="text-gray-500 text-center py-4">Belum ada materi</p>
-                                @endforelse
-                            </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
                         </div>
                     </div>
-
                 </div>
+            </div>
+        </div>
 
-                {{-- Right Column --}}
-                <div class="space-y-6">
-                    
-                    {{-- Quick Actions --}}
-                    <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                        <div class="p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                            <div class="space-y-2">
-                                <a href="{{ route('guru.materi.create') }}" class="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700">
-                                    + Buat Materi Baru
-                                </a>
-                                <a href="{{ route('guru.materi.index', ['tipe' => 'kuis']) }}" class="block w-full px-4 py-2 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700">
-                                    📝 Kelola Kuis
-                                </a>
-                                <a href="{{ route('guru.materi.index') }}" class="block w-full px-4 py-2 bg-gray-600 text-white text-center rounded-lg hover:bg-gray-700">
-                                    📚 Lihat Semua Materi
-                                </a>
+        <!-- Kehadiran -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Kehadiran
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $stats['absensi_hadir'] }}/{{ $stats['total_absensi'] }}
+                            </div>
+                            <div class="progress progress-sm mt-2">
+                                @php
+                                    $persentase = $stats['total_absensi'] > 0 ? ($stats['absensi_hadir'] / $stats['total_absensi']) * 100 : 0;
+                                @endphp
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                     style="width: {{ $persentase }}%" 
+                                     aria-valuenow="{{ $persentase }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
                             </div>
                         </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    {{-- Kuis Pending Review --}}
-                    <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                        <div class="p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-semibold text-gray-900">Perlu Dinilai</h3>
-                                @if($stats['jawaban_belum_dinilai'] > 0)
-                                    <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
-                                        {{ $stats['jawaban_belum_dinilai'] }}
+        <!-- Rata-rata Nilai -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Rata-rata Nilai
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ number_format($stats['rata_rata_nilai'], 1) }}
+                            </div>
+                            <div class="text-xs text-muted mt-1">
+                                Dari {{ $stats['jawaban_sudah_dinilai'] }} jawaban
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <!-- Materi per Kelas -->
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Materi per Kelas</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartMateriPerKelas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Materi per Bulan -->
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-success">Materi per Bulan</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartMateriPerBulan"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Absensi Status -->
+        <div class="col-xl-4 col-lg-12 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-info">Status Absensi Bulan Ini</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartAbsensiStatus"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Kuis Pending -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Kuis Perlu Dinilai
+                    </h6>
+                    <span class="badge badge-warning">{{ $kuisPending->count() }}</span>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    @forelse($kuisPending as $jawaban)
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ $jawaban->siswa->name }}</h6>
+                            <p class="mb-1 text-sm text-muted">
+                                {{ $jawaban->materi->judul }}
+                            </p>
+                            <small class="text-muted">
+                                <i class="far fa-clock"></i> {{ $jawaban->days_waiting }} hari yang lalu
+                                @if($jawaban->priority === 'high')
+                                    <span class="badge badge-danger ml-2">Urgent</span>
+                                @elseif($jawaban->priority === 'medium')
+                                    <span class="badge badge-warning ml-2">Medium</span>
+                                @endif
+                            </small>
+                        </div>
+                        <div>
+                            <a href="{{ route('guru.kuis.detail', $jawaban->id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> Nilai
+                            </a>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="text-muted">Semua kuis sudah dinilai!</p>
+                    </div>
+                    @endforelse
+                </div>
+                @if($kuisPending->count() > 0)
+                <div class="card-footer text-center">
+                    <a href="{{ route('guru.materi.index', ['tipe' => 'kuis']) }}" 
+                       class="small">Lihat Semua Kuis</a>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Materi Terbaru -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-history"></i> Materi Terbaru
+                    </h6>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    @forelse($recentMateri as $materi)
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                        <div class="mr-3">
+                            @if($materi->tipe === 'kuis')
+                                <div class="icon-circle bg-warning">
+                                    <i class="fas fa-clipboard-list text-white"></i>
+                                </div>
+                            @else
+                                <div class="icon-circle bg-primary">
+                                    <i class="fas fa-book text-white"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ $materi->judul }}</h6>
+                            <small class="text-muted">
+                                Kelas {{ $materi->kelas }} • 
+                                {{ $materi->created_at->diffForHumans() }}
+                            </small>
+                            <div class="mt-1">
+                                @if($materi->is_published)
+                                    <span class="badge badge-success">Published</span>
+                                @else
+                                    <span class="badge badge-secondary">Draft</span>
+                                @endif
+                                @if($materi->tipe === 'kuis')
+                                    <span class="badge badge-info">
+                                        {{ $materi->jawaban_kuis_count }} Jawaban
+                                    </span>
+                                @else
+                                    <span class="badge badge-info">
+                                        {{ $materi->absensi_hadir_count }}/{{ $materi->absensi_count }} Hadir
                                     </span>
                                 @endif
                             </div>
-                            <div class="space-y-3">
-                                @forelse($kuis_pending as $jawaban)
-                                    <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <p class="font-medium text-gray-900">{{ $jawaban->siswa->name }}</p>
-                                        <p class="text-sm text-gray-600">{{ $jawaban->materi->judul }}</p>
-                                        <a href="{{ route('guru.materi.jawaban-kuis', $jawaban->materi_id) }}" class="text-xs text-blue-600 hover:text-blue-800">
-                                            Nilai Sekarang →
-                                        </a>
-                                    </div>
-                                @empty
-                                    <p class="text-gray-500 text-center py-4">Tidak ada kuis yang perlu dinilai</p>
-                                @endforelse
-                            </div>
+                        </div>
+                        <div>
+                            <a href="{{ route('guru.materi.show', $materi->id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
                         </div>
                     </div>
-
-                    {{-- Recent Absensi --}}
-                    <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                        <div class="p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Absensi Terbaru</h3>
-                            <div class="space-y-3">
-                                @forelse($recent_absensi->take(5) as $absen)
-                                    <div class="flex items-center justify-between text-sm">
-                                        <div class="flex-1">
-                                            <p class="font-medium text-gray-900">{{ $absen->siswa->name }}</p>
-                                            <p class="text-xs text-gray-500">{{ $absen->materi->judul }}</p>
-                                        </div>
-                                        <span class="px-2 py-1 text-xs rounded-full {{ 
-                                            $absen->status === 'hadir' ? 'bg-green-100 text-green-800' : 
-                                            ($absen->status === 'izin' ? 'bg-blue-100 text-blue-800' : 
-                                            ($absen->status === 'sakit' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'))
-                                        }}">
-                                            {{ ucfirst($absen->status) }}
-                                        </span>
-                                    </div>
-                                @empty
-                                    <p class="text-gray-500 text-center py-4">Belum ada absensi</p>
-                                @endforelse
-                            </div>
-                        </div>
+                    @empty
+                    <div class="text-center py-4">
+                        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Belum ada materi</p>
+                        <a href="{{ route('guru.materi.create') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Buat Materi
+                        </a>
                     </div>
-
+                    @endforelse
                 </div>
-
             </div>
-
         </div>
     </div>
-</x-app-layout>
+
+    <!-- Siswa Row -->
+    <div class="row">
+        <!-- Siswa Paling Aktif -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 bg-success text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-trophy"></i> Siswa Paling Aktif
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @forelse($siswaAktif as $index => $item)
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="mr-3">
+                            <div class="ranking-badge ranking-{{ $index + 1 }}">
+                                {{ $index + 1 }}
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ $item->siswa->name }}</h6>
+                            <small class="text-muted">
+                                NISN: {{ $item->siswa->nisn }} • Kelas {{ $item->siswa->kelas }}
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge badge-success badge-pill">
+                                {{ $item->total_hadir }} Hadir
+                            </span>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Belum ada data kehadiran bulan ini</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <!-- Siswa Perlu Perhatian -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 bg-danger text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-exclamation-circle"></i> Siswa Perlu Perhatian
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @forelse($siswaPerluPerhatian as $item)
+                    <div class="alert alert-danger d-flex align-items-center mb-2" role="alert">
+                        <i class="fas fa-user-times mr-3"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ $item->siswa->name }}</h6>
+                            <small>
+                                NISN: {{ $item->siswa->nisn }} • Kelas {{ $item->siswa->kelas }}
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge badge-danger badge-pill">
+                                {{ $item->total_alpha }}x Alpha
+                            </span>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="text-center py-4">
+                        <i class="fas fa-smile fa-3x text-success mb-3"></i>
+                        <p class="text-muted">Semua siswa aktif! Tidak ada yang perlu perhatian khusus.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aktivitas Guru -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line"></i> Aktivitas Anda Bulan Ini
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">
+                                <i class="fas fa-book fa-2x text-primary mb-2"></i>
+                                <h4 class="font-weight-bold">{{ $aktivitasGuru['materi_dibuat_bulan_ini'] }}</h4>
+                                <p class="text-muted mb-0">Materi Dibuat</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <h4 class="font-weight-bold">{{ $aktivitasGuru['kuis_dinilai_bulan_ini'] }}</h4>
+                                <p class="text-muted mb-0">Kuis Dinilai</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">
+                                <i class="fas fa-sign-in-alt fa-2x text-info mb-2"></i>
+                                <h4 class="font-weight-bold">{{ $aktivitasGuru['total_login_bulan_ini'] }}</h4>
+                                <p class="text-muted mb-0">Total Login</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('styles')
+<style>
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ranking-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.ranking-1 {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+}
+
+.ranking-2 {
+    background: linear-gradient(135deg, #C0C0C0, #808080);
+}
+
+.ranking-3 {
+    background: linear-gradient(135deg, #CD7F32, #8B4513);
+}
+
+.ranking-4, .ranking-5 {
+    background: linear-gradient(135deg, #6c757d, #495057);
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// Chart Materi per Kelas
+const ctxKelas = document.getElementById('chartMateriPerKelas').getContext('2d');
+new Chart(ctxKelas, {
+    type: 'doughnut',
+    data: {
+        labels: {!! json_encode(array_keys($materiPerKelas)) !!}.map(k => 'Kelas ' + k),
+        datasets: [{
+            data: {!! json_encode(array_values($materiPerKelas)) !!},
+            backgroundColor: [
+                '#4e73df', '#1cc88a', '#36b9cc', 
+                '#f6c23e', '#e74a3b', '#858796'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Chart Materi per Bulan
+const ctxBulan = document.getElementById('chartMateriPerBulan').getContext('2d');
+new Chart(ctxBulan, {
+    type: 'line',
+    data: {
+        labels: {!! json_encode(array_column($materiPerBulan, 'label')) !!},
+        datasets: [{
+            label: 'Materi Dibuat',
+            data: {!! json_encode(array_column($materiPerBulan, 'total')) !!},
+            borderColor: '#1cc88a',
+            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Chart Absensi Status
+const ctxAbsensi = document.getElementById('chartAbsensiStatus').getContext('2d');
+new Chart(ctxAbsensi, {
+    type: 'bar',
+    data: {
+        labels: ['Hadir', 'Izin', 'Sakit', 'Alpha'],
+        datasets: [{
+            label: 'Jumlah',
+            data: [
+                {{ $absensiPerStatus['hadir'] ?? 0 }},
+                {{ $absensiPerStatus['izin'] ?? 0 }},
+                {{ $absensiPerStatus['sakit'] ?? 0 }},
+                {{ $absensiPerStatus['alpha'] ?? 0 }}
+            ],
+            backgroundColor: [
+                '#1cc88a',
+                '#36b9cc',
+                '#f6c23e',
+                '#e74a3b'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+@endpush
+@endsection

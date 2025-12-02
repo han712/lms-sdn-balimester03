@@ -2,7 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Http; // ← DIPINDAH KE ATAS
+use Illuminate\Support\Facades\Http;
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Guru\GuruController;
 use App\Http\Controllers\Guru\DataSiswaController;
@@ -72,6 +73,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('absensi', [AdminController::class, 'allAbsensi'])->name('absensi.index');
     });
 
+
 // ==========================
 // Guru Routes
 // ==========================
@@ -80,18 +82,14 @@ Route::middleware(['auth', 'verified', 'role:guru'])
     ->name('guru.')
     ->group(function () {
 
-        Route::get('/dashboard', [GuruController::class, 'index'])
-            ->name('dashboard');
+        // Dashboard
+        Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');
 
-        Route::get('/data-siswa', function () {
-            $path = storage_path('app/siswa_full.json');
-            $json = file_get_contents($path);
-            $data = json_decode(trim($json, "\xEF\xBB\xBF"), true);
+        // =======================================
+        // MATERI CRUD (CUSTOM + REMOTE DIGABUNG)
+        // =======================================
 
-            return view('guru.datasiswa', compact('data'));
-        })->name('datasiswa');
-
-        // Materi CRUD
+        // Custom CRUD (punyamu)
         Route::get('materi', [GuruController::class, 'materiIndex'])->name('materi.index');
         Route::get('materi/create', [GuruController::class, 'createMateri'])->name('materi.create');
         Route::post('materi', [GuruController::class, 'storeMateri'])->name('materi.store');
@@ -99,37 +97,40 @@ Route::middleware(['auth', 'verified', 'role:guru'])
         Route::put('materi/{materi}', [GuruController::class, 'updateMateri'])->name('materi.update');
         Route::delete('materi/{materi}', [GuruController::class, 'destroyMateri'])->name('materi.destroy');
 
-        Route::post('materi/{materi}/toggle-publish', [GuruController::class, 'togglePublish'])->name('materi.toggle-publish');
+        // Dari remote (publish, duplicate, bulk)
         Route::post('materi/{materi}/duplicate', [GuruController::class, 'duplicate'])->name('materi.duplicate');
+        Route::post('materi/{materi}/toggle-publish', [GuruController::class, 'togglePublish'])->name('materi.toggle-publish');
+        Route::post('materi/bulk-publish', [GuruController::class, 'bulkPublish'])->name('materi.bulk-publish');
         Route::post('materi/bulk-delete', [GuruController::class, 'bulkDelete'])->name('materi.bulk-delete');
 
+        // Absensi
         Route::get('materi/{materi}/absensi', [GuruController::class, 'absensi'])->name('materi.absensi');
-        Route::post('materi/{materi}/absensi/update', [GuruController::class, 'updateAbsensi'])->name('materi.absensi.update');
-        Route::post('materi/{materi}/absensi/bulk-update', [GuruController::class, 'bulkUpdateAbsensi'])->name('materi.absensi.bulk-update');
-        Route::post('absensi/export', [GuruController::class, 'exportAbsensi'])->name('absensi.export');
+        Route::put('materi/{materi}/absensi', [GuruController::class, 'updateAbsensi'])->name('materi.absensi.update');
+        Route::get('laporan/absensi', [GuruController::class, 'exportRekapAbsensi'])->name('laporan.absensi');
 
+        // Kuis & Penilaian
         Route::get('materi/{materi}/jawaban-kuis', [GuruController::class, 'jawabanKuis'])->name('materi.jawaban-kuis');
         Route::post('jawaban-kuis/{jawaban}/nilai', [GuruController::class, 'nilaiKuis'])->name('jawaban-kuis.nilai');
         Route::post('materi/{materi}/jawaban-kuis/bulk-nilai', [GuruController::class, 'bulkNilaiKuis'])->name('materi.jawaban-kuis.bulk-nilai');
 
+        // Data Guru
         Route::get('data-guru', [GuruController::class, 'dataGuru'])->name('data-guru');
 
-        // ==========================
-        // DATA SISWA → route API ke Blade
-        // ==========================
+        // Data Siswa
         Route::get('data-siswa', function () {
             $path = storage_path('app/siswa_full.json');
 
             $json = file_get_contents($path);
             $json = trim($json, "\xEF\xBB\xBF");
-            
+
             $data = json_decode($json, true);
             return view('guru.datasiswa', compact('data'));
         })->name('data-siswa');
     });
 
+
 // ==========================
-// Siswa Routes
+// Siswa Routes (API)
 // ==========================
 Route::prefix('api')->group(function () {
     Route::get('/siswa', function () {
@@ -137,13 +138,11 @@ Route::prefix('api')->group(function () {
         $path = storage_path('app/siswa_full.json');
         $json = file_get_contents($path);
 
-        // FIX BOM / karakter tak terlihat
+        // Fix BOM
         $json = trim($json, "\xEF\xBB\xBF");
 
-        // Decode
         $data = json_decode($json, true);
 
-        // Jika gagal decode → debug
         if ($data === null) {
             return response()->json([
                 'error' => 'JSON gagal didecode',
