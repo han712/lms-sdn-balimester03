@@ -29,6 +29,9 @@
                         <x-nav-link :href="route('guru.dashboard')" :active="request()->routeIs('guru.dashboard')">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </x-nav-link>
+                        <x-nav-link :href="route('guru.data-siswa')" :active="request()->routeIs('guru.data-siswa')">
+                            <i class="bi bi-person-badge"></i> Data Siswa
+                        </x-nav-link>
                         <x-nav-link :href="route('guru.materi.index')" :active="request()->routeIs('guru.materi.*')">
                             <i class="bi bi-journal-text"></i> Materi & Kuis
                         </x-nav-link>
