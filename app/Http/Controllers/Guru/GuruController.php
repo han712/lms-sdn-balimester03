@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\Materi;
@@ -190,35 +191,68 @@ class GuruController extends Controller
         ));
     }
 
-    // Helper untuk tracking login
-    private function getLoginCountThisMonth($userId)
+
+    /**
+     * ======================================
+     * DATA GURU (Foto Folder + Biodata JSON)
+     * ======================================
+     */
+    public function dataGuru()
     {
-        // Implementasi tergantung sistem tracking login Anda
-        // Bisa menggunakan tabel logs atau activity
-        return 0; // Placeholder
+        // FILE JSON: public/dataGuru.json
+        $jsonPath = public_path('dataGuru.json');
+
+        $guruData = file_exists($jsonPath)
+            ? collect(json_decode(file_get_contents($jsonPath), true))
+            : collect([]);
+
+        // FOTO: public/FotoGuru
+        $path = public_path('FotoGuru');
+        $files = File::exists($path) ? File::files($path) : [];
+
+        // GABUNG FOTO + JSON
+        $guruList = collect($files)->map(function ($file) use ($guruData) {
+
+            $name = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+
+            // cari data di JSON berdasarkan nama foto
+            $info = $guruData->firstWhere('name', $name);
+
+            return (object)[
+                'name' => $name,
+                'foto_url' => asset('FotoGuru/' . $file->getFilename()),
+                'tempat_lahir' => $info['tempat_lahir'] ?? '-',
+                'tanggal_lahir' => $info['tanggal_lahir'] ?? '-',
+                'agama' => $info['agama'] ?? '-',
+                'nip' => $info['nip'] ?? '-',
+                'mapel' => $info['mapel'] ?? '-'
+            ];
+        });
+
+        return view('guru.data-guru', compact('guruList'));
     }
 
-    // ========================================
-    // MATERI CRUD - IMPROVED
-    // ========================================
-    
-    public function index()
+
+    /**
+     * ======================================
+     * HALAMAN MATERI
+     * ======================================
+     */
+    public function materiIndex()
     {
-        $query = Materi::where('guru_id', Auth::id());
-
-        // Search
-        if (request('search')) {
-            $search = request('search');
-            $query->where(function($q) use ($search) {
-                $q->where('judul', 'like', "%{$search}%")
-                  ->orWhere('deskripsi', 'like', "%{$search}%");
-            });
-        }
-
-        // Filter kelas
-        if (request('kelas')) {
-            $query->where('kelas', request('kelas'));
-        }
+        $materi = Materi::where('guru_id', Auth::id())
+            ->when(request('search'), function ($q) {
+                $q->where('judul', 'like', '%' . request('search') . '%')
+                  ->orWhere('deskripsi', 'like', '%' . request('search') . '%');
+            })
+            ->when(request('kelas'), fn($q) => $q->where('kelas', request('kelas')))
+            ->when(request('tipe'), fn($q) => $q->where('tipe', request('tipe')))
+            ->when(request('status'), function ($q) {
+                $is_published = request('status') === 'published';
+                $q->where('is_published', $is_published);
+            })
+            ->latest()
+            ->paginate(15);
 
         // Filter tipe
         if (request('tipe')) {
@@ -289,7 +323,7 @@ class GuruController extends Controller
         try {
             DB::beginTransaction();
 
-            $materiData = [
+            $data = [
                 'guru_id' => Auth::id(),
                 'judul' => $validated['judul'],
                 'deskripsi' => $validated['deskripsi'],
@@ -325,7 +359,7 @@ class GuruController extends Controller
                 $materiData['file_type'] = $file->getMimeType();
             }
 
-            $materi = Materi::create($materiData);
+            $materi = Materi::create($data);
 
             // Auto-create absensi untuk materi yang dipublish
             if ($materi->is_published && $materi->tipe === 'materi') {
