@@ -1,10 +1,16 @@
 <?php
-
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Guru\GuruController;
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\ProfileController;
+
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\DashboardController;
+
+use App\Http\Controllers\Guru\GuruController;
+use App\Http\Controllers\Guru\GuruProfileController;
+
+use App\Http\Controllers\Siswa\SiswaController;
+use App\Http\Controllers\Siswa\SiswaProfileController;
+use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -22,7 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return match($user->role) {
             'admin' => redirect()->route('admin.dashboard'),
             'guru' => redirect()->route('guru.materi.index'),
-            'siswa' => redirect()->route('siswa.materi.index'),
+            'siswa' => redirect()->route('siswa.dashboard'),
             default => abort(403)
         };
     })->name('dashboard');
@@ -141,6 +147,7 @@ Route::middleware(['auth', 'verified', 'role:guru'])
         // 4. Absensi Management
         Route::get('materi/{materi}/absensi', [GuruController::class, 'absensi'])->name('materi.absensi');
         Route::put('materi/{materi}/absensi', [GuruController::class, 'updateAbsensi'])->name('materi.absensi.update');
+        Route::get('materi/{materi}/hasil-kuis', [GuruController::class, 'hasilKuis'])->name('kuis.hasil');
         Route::get('laporan/absensi', [GuruController::class, 'exportRekapAbsensi'])->name('laporan.absensi');
 
         // 5. Kuis & Penilaian
@@ -149,9 +156,9 @@ Route::middleware(['auth', 'verified', 'role:guru'])
         Route::put('kuis/{jawaban}/nilai', [GuruController::class, 'nilaiJawaban'])->name('kuis.nilai');
 
         // 6. Profil
-        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::put('password', [ProfileController::class, 'updatePassword'])->name('password.update');
+        Route::get('profile', [GuruProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [GuruProfileController::class, 'update'])->name('profile.update');
+        Route::put('password', [GuruProfileController::class, 'updatePassword'])->name('password.update');
     });
 
 /*
@@ -165,19 +172,26 @@ Route::middleware(['auth', 'verified', 'role:siswa'])
     ->name('siswa.')
     ->group(function () {
         
-        // Materi & Kuis
-        Route::get('materi', [SiswaController::class, 'index'])
-            ->name('materi.index');
-        Route::get('materi/{materi}', [SiswaController::class, 'show'])
-            ->name('materi.show');
-        Route::post('materi/{materi}/submit-kuis', [SiswaController::class, 'submitKuis'])
-            ->name('materi.submit-kuis');
+        // 1. Dashboard
+        Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
+
+        // 2. Profile Management (SiswaProfileController)
+        Route::get('/profile', [SiswaProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [SiswaProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [SiswaProfileController::class, 'updatePassword'])->name('password.update');
+        Route::delete('/profile/avatar', [SiswaProfileController::class, 'deleteAvatar'])->name('profile.delete-avatar');
+        Route::get('/profile/activity', [SiswaProfileController::class, 'activityLog'])->name('profile.activity');
+
+        // 3. Materi & Kuis (SiswaController)
+        Route::get('/materi', [SiswaController::class, 'index'])->name('materi.index');
+        Route::get('/materi/{materi}', [SiswaController::class, 'show'])->name('materi.show');
         
-        // Riwayat
-        Route::get('riwayat-absensi', [SiswaController::class, 'riwayatAbsensi'])
-            ->name('riwayat-absensi');
-        Route::get('riwayat-kuis', [SiswaController::class, 'riwayatKuis'])
-            ->name('riwayat-kuis');
+        // Submit Kuis
+        Route::post('/materi/{materi}/submit-kuis', [SiswaController::class, 'submitKuis'])->name('materi.submit-kuis');
+        
+        // 4. Riwayat
+        Route::get('/riwayat-absensi', [SiswaController::class, 'riwayatAbsensi'])->name('riwayat-absensi');
+        Route::get('/riwayat-kuis', [SiswaController::class, 'riwayatKuis'])->name('riwayat-kuis');
     });
 
 

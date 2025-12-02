@@ -3,259 +3,190 @@
 @section('title', 'Dashboard Siswa')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Dashboard Siswa</h1>
-        <p class="mt-1 text-sm text-gray-600">Selamat datang, {{ auth()->user()->name }} - Kelas {{ auth()->user()->kelas }}</p>
+<div class="container-fluid py-4">
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-primary text-white rounded-2xl overflow-hidden position-relative">
+                <div class="card-body p-4 p-lg-5 position-relative z-index-1">
+                    <h1 class="display-6 fw-bold">Halo, {{ auth()->user()->name }}! 👋</h1>
+                    <p class="lead mb-0">Kamu berada di Kelas {{ auth()->user()->kelas }}. Ayo selesaikan misimu hari ini!</p>
+                </div>
+                <i class="bi bi-rocket-takeoff-fill position-absolute text-white-50" style="font-size: 10rem; right: -20px; bottom: -40px; transform: rotate(-15deg);"></i>
+            </div>
+        </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <!-- Total Materi -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-blue-500 p-3">
-                            <i class="bi bi-book-fill text-white text-2xl"></i>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-xl h-100 hover-lift">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="icon-shape bg-primary bg-opacity-10 text-primary p-3 rounded-circle me-3">
+                            <i class="bi bi-book-half fs-4"></i>
                         </div>
+                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Materi</h6>
                     </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-sm font-medium text-gray-500">Materi Tersedia</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $stats['total_materi'] }}</p>
-                    </div>
-                </div>
-                <div class="mt-4 text-xs text-gray-500">
-                    {{ $stats['materi_diakses'] }} Diakses
+                    <h2 class="fw-bold mb-0">{{ $stats['total_materi'] }}</h2>
+                    <small class="text-success fw-bold"><i class="bi bi-check-lg"></i> {{ $stats['materi_diakses'] }} Diakses</small>
                 </div>
             </div>
         </div>
 
-        <!-- Total Kuis -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-yellow-500 p-3">
-                            <i class="bi bi-question-circle-fill text-white text-2xl"></i>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-xl h-100 hover-lift">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="icon-shape bg-success bg-opacity-10 text-success p-3 rounded-circle me-3">
+                            <i class="bi bi-trophy-fill fs-4"></i>
                         </div>
+                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Tugas Selesai</h6>
                     </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-sm font-medium text-gray-500">Kuis Tersedia</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $stats['total_kuis'] }}</p>
-                    </div>
-                </div>
-                <div class="mt-4 text-xs text-gray-500">
-                    {{ $stats['kuis_dijawab'] }} Dijawab
+                    <h2 class="fw-bold mb-0">{{ $stats['kuis_dijawab'] }}</h2>
+                    <small class="text-muted">Hebat!</small>
                 </div>
             </div>
         </div>
 
-        <!-- Kuis Dinilai -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-green-500 p-3">
-                            <i class="bi bi-check-circle-fill text-white text-2xl"></i>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-xl h-100 hover-lift">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="icon-shape bg-warning bg-opacity-10 text-warning p-3 rounded-circle me-3">
+                            <i class="bi bi-star-fill fs-4"></i>
                         </div>
+                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Rata-rata</h6>
                     </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-sm font-medium text-gray-500">Kuis Dinilai</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $stats['kuis_dinilai'] }}</p>
-                    </div>
+                    <h2 class="fw-bold mb-0">{{ number_format($stats['rata_nilai'], 1) }}</h2>
+                    <small class="text-muted">Pertahankan!</small>
                 </div>
             </div>
         </div>
 
-        <!-- Rata-rata Nilai -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-purple-500 p-3">
-                            <i class="bi bi-trophy-fill text-white text-2xl"></i>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-xl h-100 hover-lift">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="icon-shape bg-danger bg-opacity-10 text-danger p-3 rounded-circle me-3">
+                            <i class="bi bi-puzzle-fill fs-4"></i>
                         </div>
+                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Total Kuis</h6>
                     </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-sm font-medium text-gray-500">Rata-rata Nilai</p>
-                        <p class="text-2xl font-semibold text-gray-900">
-                            {{ $stats['rata_nilai'] ? number_format($stats['rata_nilai'], 1) : '-' }}
-                        </p>
-                    </div>
+                    <h2 class="fw-bold mb-0">{{ $stats['total_materi'] }}</h2> <small class="text-muted">Tersedia</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Materi Tersedia -->
-    <div class="mb-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-900">Materi & Kuis Terbaru</h2>
-            <a href="{{ route('siswa.materi.index') }}" class="text-sm text-blue-600 hover:text-blue-800">Lihat Semua →</a>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse($available_materi as $materi)
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg hover:shadow-md transition">
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="text-xs px-2 py-1 rounded-full {{ $materi->tipe == 'kuis' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' }}">
-                            {{ ucfirst($materi->tipe) }}
-                        </span>
-                        @if($materi->tanggal_selesai && \Carbon\Carbon::now()->diffInDays($materi->tanggal_selesai, false) <= 3 && \Carbon\Carbon::now()->diffInDays($materi->tanggal_selesai, false) >= 0)
-                        <span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800">
-                            <i class="bi bi-exclamation-circle"></i> {{ \Carbon\Carbon::now()->diffInDays($materi->tanggal_selesai) }} hari lagi
-                        </span>
-                        @endif
+    <div class="row">
+        <div class="col-lg-8">
+            
+            @if($kuis_pending->count() > 0)
+            <div class="card border-warning border-2 bg-warning bg-opacity-10 rounded-xl mb-4">
+                <div class="card-body d-flex align-items-center justify-content-between flex-wrap">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">
+                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> 
+                            Kamu punya {{ $kuis_pending->count() }} Misi Belum Selesai!
+                        </h5>
+                        <p class="mb-0 text-muted small">Ayo kerjakan sebelum batas waktunya habis.</p>
                     </div>
-                    
-                    <h3 class="font-semibold text-gray-900 mb-2">{{ $materi->judul }}</h3>
-                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $materi->keterangan ?? 'Tidak ada deskripsi' }}</p>
-                    
-                    <div class="flex items-center text-xs text-gray-500 mb-4">
-                        <i class="bi bi-person mr-1"></i>
-                        <span>{{ $materi->guru->name }}</span>
-                        <span class="mx-2">•</span>
-                        <i class="bi bi-calendar mr-1"></i>
-                        <span>{{ $materi->tanggal_mulai->format('d M Y') }}</span>
-                    </div>
-                    
-                    <a href="{{ route('siswa.materi.show', $materi) }}" class="block w-full text-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition">
-                        Buka {{ ucfirst($materi->tipe) }}
+                </div>
+                <div class="list-group list-group-flush mt-3">
+                    @foreach($kuis_pending as $kuis)
+                    <a href="{{ route('siswa.materi.show', $kuis) }}" class="list-group-item list-group-item-action bg-transparent border-warning border-opacity-25 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-dark">{{ $kuis->judul }}</strong>
+                            <br>
+                            <small class="text-danger">
+                                <i class="bi bi-clock"></i> Deadline: {{ $kuis->tanggal_selesai ? \Carbon\Carbon::parse($kuis->tanggal_selesai)->format('d M Y, H:i') : 'Tidak ada' }}
+                            </small>
+                        </div>
+                        <span class="btn btn-sm btn-warning rounded-pill fw-bold">Kerjakan <i class="bi bi-arrow-right"></i></span>
                     </a>
+                    @endforeach
                 </div>
             </div>
-            @empty
-            <div class="col-span-3 bg-white overflow-hidden shadow-sm rounded-lg">
-                <div class="p-6 text-center text-gray-500">
-                    <i class="bi bi-inbox text-4xl mb-2"></i>
-                    <p>Belum ada materi atau kuis yang tersedia</p>
-                </div>
-            </div>
-            @endforelse
-        </div>
-    </div>
+            @endif
 
-    <!-- Kuis Belum Dikerjakan -->
-    @if($kuis_pending->count() > 0)
-    <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-        <div class="flex items-start">
-            <div class="flex-shrink-0">
-                <i class="bi bi-exclamation-triangle-fill text-yellow-400 text-xl"></i>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0 text-gray-800">📚 Materi Terbaru</h4>
+                <a href="{{ route('siswa.materi.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">Lihat Semua</a>
             </div>
-            <div class="ml-3 flex-1">
-                <h3 class="text-sm font-medium text-yellow-800">Kuis yang Belum Dikerjakan</h3>
-                <div class="mt-2 text-sm text-yellow-700">
-                    <ul class="list-disc list-inside space-y-1">
-                        @foreach($kuis_pending as $kuis)
-                        <li>
-                            <a href="{{ route('siswa.materi.show', $kuis) }}" class="underline hover:text-yellow-900">
-                                {{ $kuis->judul }}
-                            </a>
-                        </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 
-    <!-- Recent Activity -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Absensi -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Riwayat Absensi Terakhir</h3>
-                    <a href="{{ route('siswa.riwayat-absensi') }}" class="text-sm text-blue-600 hover:text-blue-800">Lihat Semua →</a>
-                </div>
-                <div class="space-y-3">
-                    @forelse($recent_absensi as $absensi)
-                    <div class="py-2 border-b border-gray-100">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">{{ $absensi->materi->judul }}</p>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    {{ $absensi->waktu_akses ? $absensi->waktu_akses->format('d M Y, H:i') : '-' }}
-                                </p>
+            <div class="row g-3">
+                @forelse($available_materi as $materi)
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-xl hover-lift overflow-hidden">
+                        <div class="card-body position-relative">
+                            <span class="badge position-absolute top-0 end-0 m-3 {{ $materi->tipe == 'kuis' ? 'bg-warning text-dark' : 'bg-primary' }}">
+                                {{ strtoupper($materi->tipe) }}
+                            </span>
+
+                            <div class="mb-3">
+                                <i class="bi {{ $materi->tipe == 'kuis' ? 'bi-pencil-square text-warning' : 'bi-book-half text-primary' }}" style="font-size: 2rem;"></i>
                             </div>
-                            <span class="text-xs px-2 py-1 rounded-full {{ $absensi->status == 'hadir' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ ucfirst($absensi->status) }}
+
+                            <h5 class="card-title fw-bold text-truncate">{{ $materi->judul }}</h5>
+                            <p class="card-text text-muted small">
+                                Oleh: {{ $materi->guru->name }}
+                            </p>
+                            
+                            <hr class="border-light">
+                            
+                            <a href="{{ route('siswa.materi.show', $materi) }}" class="btn w-100 rounded-pill {{ $materi->tipe == 'kuis' ? 'btn-warning' : 'btn-primary' }}">
+                                Buka {{ ucfirst($materi->tipe) }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-emoji-smile fs-1"></i>
+                    <p>Belum ada materi baru. Istirahat dulu ya!</p>
+                </div>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="card border-0 shadow-sm rounded-xl">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="fw-bold mb-0">⏱️ Aktivitas Terakhir</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach($recent_nilai as $nilai)
+                        <div class="list-group-item px-4 py-3 border-light">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 fw-bold text-primary">Nilai Keluar!</h6>
+                                <small class="text-muted">{{ $nilai->created_at->diffForHumans() }}</small>
+                            </div>
+                            <p class="mb-1 small">Kuis: {{ $nilai->materi->judul }}</p>
+                            <span class="badge {{ $nilai->nilai >= 70 ? 'bg-success' : 'bg-danger' }}">
+                                Skor: {{ $nilai->nilai }}
                             </span>
                         </div>
-                    </div>
-                    @empty
-                    <p class="text-sm text-gray-500 text-center py-4">Belum ada riwayat absensi</p>
-                    @endforelse
-                </div>
-            </div>
-        </div>
+                        @endforeach
 
-        <!-- Recent Nilai -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Nilai Kuis Terakhir</h3>
-                    <a href="{{ route('siswa.riwayat-kuis') }}" class="text-sm text-blue-600 hover:text-blue-800">Lihat Semua →</a>
-                </div>
-                <div class="space-y-3">
-                    @forelse($recent_nilai as $nilai)
-                    <div class="py-2 border-b border-gray-100">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">{{ $nilai->materi->judul }}</p>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    {{ $nilai->dinilai_pada ? $nilai->dinilai_pada->format('d M Y') : '-' }}
-                                </p>
+                        @foreach($recent_absensi as $absen)
+                        <div class="list-group-item px-4 py-3 border-light">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 fw-bold text-dark">Belajar</h6>
+                                <small class="text-muted">{{ $absen->waktu_akses ? \Carbon\Carbon::parse($absen->waktu_akses)->diffForHumans() : '' }}</small>
                             </div>
-                            <div class="text-right">
-                                <p class="text-lg font-bold {{ $nilai->nilai >= 75 ? 'text-green-600' : 'text-red-600' }}">
-                                    {{ $nilai->nilai }}
-                                </p>
-                                <p class="text-xs text-gray-500">{{ $nilai->nilai_huruf }}</p>
-                            </div>
+                            <p class="mb-1 small text-muted">Membuka: {{ $absen->materi->judul }}</p>
                         </div>
+                        @endforeach
+                        
+                        @if($recent_nilai->isEmpty() && $recent_absensi->isEmpty())
+                        <div class="text-center py-4 text-muted small">Belum ada aktivitas.</div>
+                        @endif
                     </div>
-                    @empty
-                    <p class="text-sm text-gray-500 text-center py-4">Belum ada nilai kuis</p>
-                    @endforelse
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Links -->
-    <div class="mt-6 bg-white overflow-hidden shadow-sm rounded-lg">
-        <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Menu</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <a href="{{ route('siswa.materi.index') }}" class="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
-                    <div class="text-center">
-                        <i class="bi bi-book text-2xl text-blue-600"></i>
-                        <p class="mt-2 text-sm font-medium text-blue-900">Lihat Materi</p>
-                    </div>
-                </a>
-                <a href="{{ route('siswa.materi.index', ['tipe' => 'kuis']) }}" class="flex items-center justify-center p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition">
-                    <div class="text-center">
-                        <i class="bi bi-question-circle text-2xl text-yellow-600"></i>
-                        <p class="mt-2 text-sm font-medium text-yellow-900">Kuis</p>
-                    </div>
-                </a>
-                <a href="{{ route('siswa.riwayat-absensi') }}" class="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition">
-                    <div class="text-center">
-                        <i class="bi bi-clock-history text-2xl text-green-600"></i>
-                        <p class="mt-2 text-sm font-medium text-green-900">Riwayat Absensi</p>
-                    </div>
-                </a>
-                <a href="{{ route('siswa.riwayat-kuis') }}" class="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition">
-                    <div class="text-center">
-                        <i class="bi bi-file-text text-2xl text-purple-600"></i>
-                        <p class="mt-2 text-sm font-medium text-purple-900">Riwayat Kuis</p>
-                    </div>
-                </a>
+                <div class="card-footer bg-white border-0 text-center py-3">
+                    <a href="{{ route('siswa.riwayat-absensi') }}" class="text-decoration-none fw-bold small">Lihat Semua Riwayat</a>
+                </div>
             </div>
         </div>
     </div>
