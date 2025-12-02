@@ -18,7 +18,7 @@ class GuruProfileController extends Controller
         // Menggunakan view edit.blade.php yang sudah Anda buat
         // Pastikan file tersebut ada di resources/views/guru/profile/edit.blade.php
         // Atau sesuaikan path-nya jika ada di folder lain.
-        return view('guru.profile.edit', [
+        return view('guru.edit', [
             'user' => auth()->user()
         ]);
         // Catatan: Sesuaikan nama view ('guru.materi.edit_profile') 

@@ -956,4 +956,22 @@ class GuruController extends Controller
         
         return back()->with('info', 'Fitur export sedang dalam pengembangan.');
     }
+
+    private function getLoginCountThisMonth($guruId)
+    {
+        // PENTING: Laravel bawaan tidak menyimpan riwayat (history) setiap kali user login.
+        // Jika kamu belum membuat tabel khusus (misal: 'login_logs'), 
+        // kembalikan nilai 0 agar aplikasi tidak error.
+        
+        return 0; 
+        
+        // JIKA SUDAH PUNYA TABEL TRACKING, CONTOH KODENYA:
+        /*
+        return DB::table('authentication_log')
+            ->where('authenticatable_id', $guruId)
+            ->where('authenticatable_type', 'App\Models\User')
+            ->whereMonth('login_at', Carbon::now()->month)
+            ->count();
+        */
+    }
 }

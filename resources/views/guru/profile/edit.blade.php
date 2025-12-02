@@ -28,7 +28,7 @@
 
                     <form action="{{ route('guru.profile.update') }}" method="POST">
                         @csrf
-                        @method('PUT')
+                        @method('PATCH')
 
                         <div class="form-group">
                             <label for="name" class="font-weight-bold">Nama Lengkap</label>

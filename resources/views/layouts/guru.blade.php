@@ -59,7 +59,7 @@
             </div>
 
             <li class="nav-item {{ request()->routeIs('guru.profile.*') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('guru.profile.edit') }}">
+                <a class="nav-link" href="{{ route('profile.edit') }}">
                     <i class="fas fa-fw fa-user"></i>
                     <span>Profil Saya</span></a>
             </li>
@@ -99,7 +99,7 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="{{ route('guru.profile.edit') }}">
+                                <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Profile
                                 </a>
