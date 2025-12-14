@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'LMS SD') }}</title>
+    <title>{{ config('app.name', 'SDN Balimester 03') }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-
+    <link rel="icon" href="{{ asset('img/logo-sekolah.png') }}" type="image/png">
+    
+    <img src="{{ asset('img/logo-sekolah.png') }}" alt="Logo Sekolah" height="40">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -53,11 +55,11 @@
     
     <nav class="navbar navbar-expand-lg navbar-lms sticky-top mb-4">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="{{ route('siswa.dashboard') }}">
-                <i class="bi bi-mortarboard-fill fs-3 me-2"></i>
-                LMS SD
+            <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="{{ route(auth()->user()->role . '.dashboard') }}">
+            <img src="{{ asset('img/logo-sekolah.png') }}" alt="Logo" height="40" class="me-2">
+            
+            {{ config('app.name') }}
             </a>
-
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>

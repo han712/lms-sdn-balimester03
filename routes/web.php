@@ -57,9 +57,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');        
         // User Management - CRUD Complete
-        Route::resource('users', AdminController::class)->except(['create', 'store']);
-        Route::get('users/create', [AdminController::class, 'create'])->name('users.create');
-        Route::post('users', [AdminController::class, 'store'])->name('users.store');
+        // Route::resource('users', AdminController::class)->except(['create', 'store']);
+        // Route::get('users/create', [AdminController::class, 'create'])->name('users.create');
+        // Route::post('users', [AdminController::class, 'store'])->name('users.store');
         
         // User Management
         Route::get('users/create', [AdminController::class, 'create'])->name('users.create');
