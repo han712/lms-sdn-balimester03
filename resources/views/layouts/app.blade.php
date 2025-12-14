@@ -7,16 +7,13 @@
 
     <title>{{ config('app.name', 'SDN Balimester 03') }}</title>
 
+    <link rel="icon" href="{{ asset('img/logo-sekolah.png') }}" type="image/png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="icon" href="{{ asset('img/logo-sekolah.png') }}" type="image/png">
-    
-    <img src="{{ asset('img/logo-sekolah.png') }}" alt="Logo Sekolah" height="40">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
