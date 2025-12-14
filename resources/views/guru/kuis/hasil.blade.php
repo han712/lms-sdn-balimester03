@@ -5,24 +5,36 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-poll"></i> Hasil Kuis
-        </h1>
+        <h1 class="h3 mb-0 text-gray-800">Hasil Kuis: {{ $materi->judul }}</h1>
         <a href="{{ route('guru.materi.show', $materi->id) }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-body border-left-warning">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h5 class="font-weight-bold text-gray-800">{{ $materi->judul }}</h5>
-                    <p class="mb-0 text-muted">Deadline: {{ $materi->tanggal_deadline ? \Carbon\Carbon::parse($materi->tanggal_deadline)->format('d M Y, H:i') : 'Tidak ada deadline' }}</p>
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Pengumpulan</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_submit'] }}</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-users fa-2x text-gray-300"></i></div>
+                    </div>
                 </div>
-                <div class="col-md-4 text-right">
-                    <span class="h2 font-weight-bold text-primary">{{ $jawaban->whereNotNull('nilai')->count() }}</span>
-                    <span class="text-gray-500">/ {{ $jawaban->count() }} Dinilai</span>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Rata-Rata Nilai</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['rata_rata'] }}</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-chart-line fa-2x text-gray-300"></i></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -30,81 +42,47 @@
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Daftar Pengumpulan</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Detail Jawaban Siswa</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover" id="dataTable">
+                <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>No</th>
                             <th>Nama Siswa</th>
-                            <th>Waktu Kirim</th>
-                            <th>File/Jawaban</th>
-                            <th>Nilai</th>
+                            <th>Tanggal Kirim</th>
                             <th>Status</th>
+                            <th>Nilai</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($jawaban as $index => $jw)
+                        @forelse($materi->jawabanKuis as $jawaban)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $jawaban->siswa->name }}</td>
                             <td>
-                                <strong>{{ $jw->siswa->name }}</strong>
-                                <br><small class="text-muted">{{ $jw->siswa->nisn }}</small>
-                            </td>
-                            <td>
-                                {{ $jw->created_at->format('d M Y, H:i') }}
-                                @if($materi->tanggal_deadline && $jw->created_at->gt($materi->tanggal_deadline))
-                                    <span class="badge badge-danger">Terlambat</span>
+                                {{ $jawaban->created_at->format('d M Y H:i') }}
+                                @if($materi->tanggal_selesai && $jawaban->created_at > $materi->tanggal_selesai)
+                                    <span class="badge badge-danger">Telat</span>
                                 @endif
                             </td>
                             <td>
-                                @if($jw->file_path)
-                                    <a href="{{ asset('storage/' . $jw->file_path) }}" target="_blank" class="btn btn-sm btn-info">
-                                        <i class="fas fa-download"></i> Unduh File
-                                    </a>
+                                @if($jawaban->nilai !== null)
+                                    <span class="badge badge-success">Sudah Dinilai</span>
                                 @else
-                                    <button type="button" class="btn btn-sm btn-secondary" 
-                                            data-toggle="modal" data-target="#textModal{{ $jw->id }}">
-                                        <i class="fas fa-align-left"></i> Lihat Teks
-                                    </button>
-
-                                    <div class="modal fade" id="textModal{{ $jw->id }}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Jawaban {{ $jw->siswa->name }}</h5>
-                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>{{ $jw->jawaban_text }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <span class="badge badge-warning">Menunggu Penilaian</span>
                                 @endif
                             </td>
-                            <td class="font-weight-bold text-center">
-                                {{ $jw->nilai ?? '-' }}
-                            </td>
+                            <td class="font-weight-bold">{{ $jawaban->nilai ?? '-' }}</td>
                             <td>
-                                @if($jw->nilai !== null)
-                                    <span class="badge badge-success">Dinilai</span>
-                                @else
-                                    <span class="badge badge-warning">Belum Dinilai</span>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('guru.kuis.detail', $jw->id) }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-edit"></i> Nilai
+                                <a href="{{ route('guru.kuis.detail', $jawaban->id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-check-circle"></i> Periksa & Nilai
                                 </a>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4">Belum ada siswa yang mengumpulkan</td>
+                            <td colspan="5" class="text-center">Belum ada siswa yang mengumpulkan jawaban.</td>
                         </tr>
                         @endforelse
                     </tbody>

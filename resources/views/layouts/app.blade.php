@@ -95,7 +95,22 @@
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-xl">
-                            <li><a class="dropdown-item py-2" href="{{ route('siswa.profile.edit') }}"><i class="bi bi-person-gear me-2"></i> Profil Saya</a></li>
+                            <li>
+                            @php
+                                $profileRoute = '#';
+                                if(Auth::user()->role === 'admin') {
+                                    $profileRoute = route('profile.edit'); // Route profile umum/admin
+                                } elseif(Auth::user()->role === 'guru') {
+                                    $profileRoute = route('guru.profile.edit');
+                                } elseif(Auth::user()->role === 'siswa') {
+                                    $profileRoute = route('siswa.profile.edit');
+                                }
+                            @endphp
+
+                            <a class="dropdown-item py-2" href="{{ $profileRoute }}">
+                                <i class="bi bi-person-gear me-2"></i> Profil Saya
+                            </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">

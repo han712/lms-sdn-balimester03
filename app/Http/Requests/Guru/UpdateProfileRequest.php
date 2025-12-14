@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Guru;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use App\Models\User;
 
 class UpdateProfileRequest extends FormRequest
 {
