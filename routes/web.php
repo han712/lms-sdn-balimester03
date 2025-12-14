@@ -90,40 +90,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 |--------------------------------------------------------------------------
 */
 
-// Route::middleware(['auth', 'verified', 'role:guru'])
-//     ->prefix('guru')
-//     ->name('guru.')
-//     ->group(function () {
-        // Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');        // Materi Management - CRUD Complete
-        // Route::resource('materi', GuruController::class);
-        
-        // // Materi Actions
-        // Route::post('materi/{materi}/toggle-publish', [GuruController::class, 'togglePublish'])
-        //     ->name('materi.toggle-publish');
-        // Route::post('materi/{materi}/duplicate', [GuruController::class, 'duplicate'])
-        //     ->name('materi.duplicate');
-        
-        // // Bulk Actions for Materi
-        // Route::post('materi/bulk-delete', [GuruController::class, 'bulkDelete'])
-        //     ->name('materi.bulk-delete');
-        
-        // // Absensi Management
-        // Route::get('materi/{materi}/absensi', [GuruController::class, 'absensi'])
-        //     ->name('materi.absensi');
-        // Route::post('materi/{materi}/absensi/update', [GuruController::class, 'updateAbsensi'])
-        //     ->name('materi.absensi.update');
-        // Route::post('materi/{materi}/absensi/bulk-update', [GuruController::class, 'bulkUpdateAbsensi'])
-        //     ->name('materi.absensi.bulk-update');
-        // Route::post('absensi/export', [GuruController::class, 'exportAbsensi'])
-        //     ->name('absensi.export');
-        
-        // // Kuis & Penilaian
-        // Route::get('materi/{materi}/jawaban-kuis', [GuruController::class, 'jawabanKuis'])
-        //     ->name('materi.jawaban-kuis');
-        // Route::post('jawaban-kuis/{jawaban}/nilai', [GuruController::class, 'nilaiKuis'])
-        //     ->name('jawaban-kuis.nilai');
-        // Route::post('materi/{materi}/jawaban-kuis/bulk-nilai', [GuruController::class, 'bulkNilaiKuis'])
-        //     ->name('materi.jawaban-kuis.bulk-nilai');
+
 Route::middleware(['auth', 'verified', 'role:guru'])
         ->prefix('guru')
         ->name('guru.') // Ini memberi awalan nama route 'guru.'
@@ -136,7 +103,10 @@ Route::middleware(['auth', 'verified', 'role:guru'])
         // Fungsi resource ini otomatis membuat route:
         // guru.materi.index, guru.materi.create, guru.materi.store, dll.
         // Pastikan menggunakan GuruController::class
-        Route::resource('materi', GuruController::class);
+        
+        // --- MANAJEMEN MATERI (BAHAN AJAR) ---
+        Route::resource('materi', MateriController::class);
+        // Route::resource('materi', GuruController::class);
         
         // 3. Custom Routes Materi (Duplicate & Publish)
         Route::post('materi/{materi}/duplicate', [GuruController::class, 'duplicate'])->name('materi.duplicate');

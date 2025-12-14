@@ -15,10 +15,12 @@ class Materi extends Model
     protected $fillable = [
         'guru_id',
         'judul',
-        'deskripsi',
-        'file_path',
-        'tipe', // materi / kuis
+        'keterangan', // Ganti 'deskripsi' jadi 'keterangan'
+        'file',       // Ganti 'file_path' jadi 'file'
+        'tipe',
         'kelas',
+        'tanggal_mulai',   // Tambahkan ini (belum ada di model sebelumnya)
+        'tanggal_selesai', // Tambahkan ini
         'is_published'
     ];
 
