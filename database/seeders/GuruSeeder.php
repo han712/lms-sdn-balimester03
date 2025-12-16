@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+// TAMBAHKAN DUA BARIS INI:
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class GuruSeeder extends Seeder
 {

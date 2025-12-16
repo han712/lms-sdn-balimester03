@@ -41,15 +41,18 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="nip" class="font-weight-bold">NIP (Nomor Induk Pegawai)</label>
                             <input type="text" 
-                                   class="form-control @error('nip') is-invalid @enderror" 
+                                   class="form-control bg-light
                                    id="nip" name="nip" 
-                                   value="{{ old('nip', $user->nip ?? auth()->user()->nip) }}" required>
-                            @error('nip')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                                   value="{{ $user->nip ?? auth()-> user()->nip }}" 
+                                   readonly 
+                                   title="Hubungi Admin untuk mengubah data ini"
+                                   >
+                            <small class="text-muted">
+                             <i class="bi bi-lock-fill"></i> Data terkunci. Hanya Admin yang dapat mengubah.
+                            </small>
                         </div>
 
                         <div class="form-group">

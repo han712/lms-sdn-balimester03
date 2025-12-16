@@ -17,66 +17,92 @@ class QuizController extends Controller
      */
     public function index()
     {
-        $kuis = Materi::where('guru_id', Auth::id())
-            ->where('tipe', 'kuis')
-            ->withCount('jawabanKuis')
+        // Menampilkan daftar materi yang bertipe 'kuis'
+        $kuis = Materi::where('tipe', 'kuis')
+            ->where('guru_id', auth()->id())
             ->latest()
             ->paginate(10);
-
-        return view('guru.kuis.index', compact('kuis'));
+            
+        return view('guru.kuis.index', compact('kuis')); // Anda perlu buat view index khusus kuis jika mau
     }
 
     public function create()
     {
+        // Menampilkan form pembuatan kuis interaktif
         return view('guru.kuis.create');
     }
 
-    /**
-     * Logic CREATE QUIZ.
-     */
     public function store(Request $request)
     {
+        // 1. Validasi Header Kuis
         $request->validate([
             'judul' => 'required|string|max:255',
-            'keterangan' => 'nullable|string', 
-            'kelas' => 'required|in:1,2,3,4,5,6',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-            'file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'kelas' => 'required',
+            'deskripsi' => 'nullable|string',
+            // Validasi Array Soal
+            'soal' => 'required|array|min:1',
+            'soal.*.pertanyaan' => 'required|string',
+            'soal.*.tipe' => 'required|in:pilihan_ganda,essay',
+            'soal.*.kunci' => 'required', // Kunci jawaban wajib
+            'soal.*.gambar' => 'nullable|image|max:2048', // Max 2MB per gambar
         ]);
 
         DB::beginTransaction();
-        try {
-            $path = null;
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('materi/kuis', $filename, 'public');
-            }
 
-            Materi::create([
-                'guru_id' => Auth::id(),
+        try {
+            // 2. Simpan Header Kuis sebagai 'Materi'
+            $materi = Materi::create([
+                'guru_id' => auth()->id(),
                 'judul' => $request->judul,
-                'keterangan' => $request->keterangan,
-                'tipe' => 'kuis', // FIX: Tipe Kuis
+                'deskripsi' => $request->deskripsi,
                 'kelas' => $request->kelas,
-                'file' => $path, // FIX: file sesuai kolom DB
-                'tanggal_mulai' => $request->tanggal_mulai,
-                'tanggal_selesai' => $request->tanggal_selesai,
-                'is_published' => true, // Kuis biasanya langsung publish, atau bisa dibuat toggle
+                'tipe' => 'kuis', // Flagging sebagai kuis
+                'is_published' => false, // Draft dulu
             ]);
 
+            // 3. Looping Simpan Tiap Soal
+            foreach ($request->soal as $index => $item) {
+                
+                $pathGambar = null;
+                
+                // Handle Image Upload per Soal
+                if ($request->hasFile("soal.{$index}.gambar")) {
+                    $file = $request->file("soal.{$index}.gambar");
+                    $pathGambar = $file->store('soal-images', 'public');
+                }
+
+                // Siapkan opsi jawaban jika PG
+                $opsi = null;
+                if ($item['tipe'] === 'pilihan_ganda') {
+                    $opsi = [
+                        'a' => $item['opsi']['a'] ?? '',
+                        'b' => $item['opsi']['b'] ?? '',
+                        'c' => $item['opsi']['c'] ?? '',
+                        'd' => $item['opsi']['d'] ?? '',
+                    ];
+                }
+
+                // Simpan ke tabel Soal
+                Soal::create([
+                    'materi_id' => $materi->id,
+                    'tipe_soal' => $item['tipe'],
+                    'pertanyaan' => $item['pertanyaan'],
+                    'gambar' => $pathGambar,
+                    'opsi_jawaban' => $opsi,
+                    'kunci_jawaban' => $item['kunci'],
+                    'bobot_nilai' => $item['bobot'] ?? 10,
+                ]);
+            }
+
             DB::commit();
-            return redirect()->route('guru.kuis.index')->with('success', 'Kuis berhasil dibuat.');
+
+            return redirect()->route('guru.materi.index')->with('success', 'Kuis berhasil dibuat! Silahkan publish agar siswa bisa mengerjakan.');
+
         } catch (\Exception $e) {
             DB::rollBack();
-            if ($path && Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
-            }
-            return back()->with('error', 'Gagal membuat kuis: ' . $e->getMessage())->withInput();
+            return back()->withInput()->with('error', 'Gagal membuat kuis: ' . $e->getMessage());
         }
     }
-
     /**
      * Melihat hasil jawaban siswa untuk kuis tertentu.
      * Menggunakan Route Model Binding (Materi $materi) agar lebih clean.

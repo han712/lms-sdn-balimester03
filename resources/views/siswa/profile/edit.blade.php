@@ -79,8 +79,17 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-bold small text-uppercase">NISN</label>
-                                <input type="text" class="form-control" name="nisn" value="{{ old('nisn', $siswa->nisn) }}" required>
+                            <label class="form-label fw-bold small text-uppercase">NISN</label>
+                            <input type="text" 
+                                class="form-control bg-light" 
+                                name="nisn" 
+                                value="{{ $siswa->nisn }}" 
+                                readonly 
+                                title="Hubungi Admin untuk mengubah data ini">
+                                <small class="text-muted">
+                                    <i class="bi bi-lock-fill"></i> 
+                                    Data terkunci. Hanya Admin yang dapat mengubah.
+                                </small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase">Kelas</label>

@@ -105,4 +105,8 @@ class Materi extends Model
     {
         return $this->hasMany(JawabanKuis::class, 'materi_id');
     }
+    public function soals()
+    {
+        return $this->hasMany(Soal::class);
+    }
 }
