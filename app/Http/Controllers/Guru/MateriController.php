@@ -80,10 +80,10 @@ class MateriController extends Controller
             'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,png,mp4,avi|max:51200',
             'link' => 'nullable|url|max:500',
             'video' => 'nullable|url|max:500',
-            'is_published' => 'boolean',
             // FIX: Tambahkan tanggal (Wajib di DB)
-            'tanggal_mulai' => 'nullable|date', 
-            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+            'tanggal_mulai' => $request->tanggal_mulai ?? now(), 
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'is_published' => $request->boolean('is_published'),
         ]);
 
         DB::beginTransaction();

@@ -121,6 +121,9 @@ Route::middleware(['auth', 'verified', 'role:guru'])
         Route::get('kuis', [QuizController::class, 'index'])->name('kuis.index');
         Route::get('kuis/create', [QuizController::class, 'create'])->name('kuis.create');
         Route::post('kuis', [QuizController::class, 'store'])->name('kuis.store');
+
+        Route::get('kuis/{materi}/edit', [QuizController::class, 'edit'])->name('kuis.edit');
+        Route::put('kuis/{materi}', [QuizController::class, 'update'])->name('kuis.update');
         
         // Hasil & Penilaian Kuis
         Route::get('materi/{materi}/hasil-kuis', [QuizController::class, 'hasil'])->name('kuis.hasil');

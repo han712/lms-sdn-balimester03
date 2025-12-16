@@ -39,7 +39,7 @@
                 </div>
                 <div class="form-group">
                     <label>Deskripsi / Petunjuk Pengerjaan</label>
-                    <textarea name="deskripsi" class="form-control" rows="2" placeholder="Kerjakan dengan teliti ya anak-anak!"></textarea>
+                    <textarea name="keterangan" class="form-control" rows="2" placeholder="Kerjakan dengan teliti ya anak-anak!"></textarea>
                 </div>
             </div>
         </div>

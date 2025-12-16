@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Models\Materi;
 use App\Models\JawabanKuis;
+use App\Models\Soal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -38,7 +39,7 @@ class QuizController extends Controller
         $request->validate([
             'judul' => 'required|string|max:255',
             'kelas' => 'required',
-            'deskripsi' => 'nullable|string',
+            'keterangan' => 'nullable|string',
             // Validasi Array Soal
             'soal' => 'required|array|min:1',
             'soal.*.pertanyaan' => 'required|string',
@@ -54,10 +55,11 @@ class QuizController extends Controller
             $materi = Materi::create([
                 'guru_id' => auth()->id(),
                 'judul' => $request->judul,
-                'deskripsi' => $request->deskripsi,
+                'keterangan' => $request->keterangan,
                 'kelas' => $request->kelas,
                 'tipe' => 'kuis', // Flagging sebagai kuis
                 'is_published' => false, // Draft dulu
+                'tanggal_mulai' => now(),
             ]);
 
             // 3. Looping Simpan Tiap Soal
@@ -169,5 +171,88 @@ class QuizController extends Controller
 
         return redirect()->route('guru.kuis.hasil', $jawaban->materi_id)
             ->with('success', 'Nilai berhasil disimpan.');
+    }
+
+    public function edit($id)
+    {
+        // Load materi beserta soal-soalnya
+        $kuis = Materi::with('soals')->findOrFail($id);
+
+        // Security Check
+        if ($kuis->guru_id !== Auth::id()) abort(403);
+        if ($kuis->tipe !== 'kuis') return redirect()->route('guru.materi.edit', $kuis->id);
+
+        return view('guru.kuis.edit', compact('kuis'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $kuis = Materi::findOrFail($id);
+        if ($kuis->guru_id !== Auth::id()) abort(403);
+
+        $request->validate([
+            'judul' => 'required|string|max:255',
+            'kelas' => 'required',
+            'keterangan' => 'nullable|string',
+            'soal' => 'required|array|min:1',
+            'soal.*.pertanyaan' => 'required|string',
+            'soal.*.tipe' => 'required|in:pilihan_ganda,essay',
+            'soal.*.kunci' => 'required',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // 1. Update Header Kuis
+            $kuis->update([
+                'judul' => $request->judul,
+                'keterangan' => $request->keterangan,
+                'kelas' => $request->kelas,
+                'tanggal_mulai' => now(), // Atau sesuai input jika ada
+            ]);
+
+            // 2. Hapus Soal Lama (Strategi Reset agar mudah handle urutan/hapus)
+            // Note: Hati-hati jika sudah ada jawaban siswa, idealnya jangan dihapus tapi di-soft delete
+            // Untuk development ini, kita replace semua soal.
+            $kuis->soals()->delete(); 
+
+            // 3. Simpan Ulang Soal Baru/Edit
+            foreach ($request->soal as $index => $item) {
+                
+                $pathGambar = null;
+                // Cek apakah ada file baru atau file lama (hidden input)
+                if ($request->hasFile("soal.{$index}.gambar")) {
+                    $pathGambar = $request->file("soal.{$index}.gambar")->store('soal-images', 'public');
+                } elseif (isset($item['gambar_lama'])) {
+                    $pathGambar = $item['gambar_lama'];
+                }
+
+                $opsi = null;
+                if ($item['tipe'] === 'pilihan_ganda') {
+                    $opsi = [
+                        'a' => $item['opsi']['a'] ?? '',
+                        'b' => $item['opsi']['b'] ?? '',
+                        'c' => $item['opsi']['c'] ?? '',
+                        'd' => $item['opsi']['d'] ?? '',
+                    ];
+                }
+
+                Soal::create([
+                    'materi_id' => $kuis->id,
+                    'tipe_soal' => $item['tipe'],
+                    'pertanyaan' => $item['pertanyaan'],
+                    'gambar' => $pathGambar,
+                    'opsi_jawaban' => $opsi,
+                    'kunci_jawaban' => $item['kunci'],
+                    'bobot_nilai' => $item['bobot'] ?? 10,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('guru.materi.index', ['tipe' => 'kuis'])->with('success', 'Kuis berhasil diperbarui!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal update kuis: ' . $e->getMessage());
+        }
     }
 }
