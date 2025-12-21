@@ -86,9 +86,11 @@
                                 <label class="form-label">Kelas <span class="text-danger">*</span></label>
                                 <select name="kelas" class="form-select">
                                     <option value="">Pilih</option>
-                                    @foreach(range(1, 6) as $k)
-                                        <option value="{{ $k }}" {{ old('kelas') == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
-                                    @endforeach
+                                    @foreach(config('lms.daftar_kelas') as $k)
+                                        <option value="{{ $k }}" {{ old('kelas', $user->kelas ?? '') == $k ? 'selected' : '' }}>
+                                            Kelas {{ $k }}
+                                        </option>
+                                      @endforeach
                                 </select>
                             </div>
                         </div>

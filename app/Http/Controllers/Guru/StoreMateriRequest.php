@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreMateriRequest extends FormRequest
 {
@@ -17,7 +18,7 @@ class StoreMateriRequest extends FormRequest
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string|max:5000',
             'tipe' => 'required|in:materi,kuis',
-            'kelas' => 'required|in:1,2,3,4,5,6',
+            'kelas' => ['required', Rule::in(config('lms.daftar_kelas'))],
             'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4,avi|max:51200', // Max 50MB
             'is_published' => 'boolean'
         ];

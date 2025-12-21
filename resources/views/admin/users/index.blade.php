@@ -54,7 +54,7 @@
                             <label class="form-label small text-muted">Kelas</label>
                             <select name="kelas" class="form-select form-select-sm">
                                 <option value="">Semua Kelas</option>
-                                @foreach(range(1, 6) as $k)
+                                @foreach(config('lms.daftar_kelas') as $k)
                                     <option value="{{ $k }}" {{ request('kelas') == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                                 @endforeach
                             </select>
@@ -84,23 +84,74 @@
     </div>
 
     <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light py-2" id="bulkActionToolbar" style="display: none;">
+            <div class="d-flex align-items-center gap-2">
+                <span class="small fw-bold text-secondary me-2"><span id="selectedCount">0</span> terpilih</span>
+                
+                <form action="{{ route('admin.users.bulk-delete') }}" method="POST" id="bulkDeleteForm" class="d-inline">
+                    @csrf
+                    @method('DELETE')
+                    <div id="bulkDeleteInputs"></div>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmBulkDelete()">
+                        <i class="bi bi-trash me-1"></i> Hapus Terpilih
+                    </button>
+                </form>
+
+                <div class="dropdown d-inline">
+                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-toggle-on me-1"></i> Ubah Status
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <form action="{{ route('admin.users.bulk-toggle-active') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="is_active" value="1">
+                                <div id="bulkActiveInputs1"></div>
+                                <button type="submit" class="dropdown-item small" onclick="prepareBulkInputs('bulkActiveInputs1')">
+                                    <i class="bi bi-check-circle text-success me-2"></i> Aktifkan Semua
+                                </button>
+                            </form>
+                        </li>
+                        <li>
+                            <form action="{{ route('admin.users.bulk-toggle-active') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="is_active" value="0">
+                                <div id="bulkActiveInputs0"></div>
+                                <button type="submit" class="dropdown-item small" onclick="prepareBulkInputs('bulkActiveInputs0')">
+                                    <i class="bi bi-x-circle text-secondary me-2"></i> Nonaktifkan Semua
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0" width="100%">
                     <thead class="bg-light text-secondary">
                         <tr>
-                            <th width="5%" class="text-center px-3">No</th>
+                            <th width="3%" class="text-center px-3">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                            </th>
+                            <th width="5%" class="text-center">No</th>
                             <th width="30%">User</th>
                             <th width="15%">Role</th>
                             <th width="15%">Info Sekolah</th>
                             <th width="15%">Status</th>
-                            <th width="20%" class="text-center">Aksi</th>
+                            <th width="17%" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($users as $index => $user)
                         <tr>
-                            <td class="text-center px-3">{{ $users->firstItem() + $index }}</td>
+                            <td class="text-center px-3">
+                                @if(auth()->id() !== $user->id) 
+                                    <input class="form-check-input user-checkbox" type="checkbox" value="{{ $user->id }}">
+                                @endif
+                            </td>
+                            <td class="text-center">{{ $users->firstItem() + $index }}</td>
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="avatar rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold me-3" style="width: 40px; height: 40px;">
@@ -207,7 +258,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="7" class="text-center py-5 text-muted">
                                 <div class="d-flex flex-column align-items-center">
                                     <i class="bi bi-inbox fs-1 opacity-25"></i>
                                     <span class="mt-2">Data tidak ditemukan</span>
@@ -269,13 +320,69 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Initialize Bootstrap Tooltips
+    // --- 1. LOGIC SELECT ALL & BULK ACTION ---
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const bulkActionToolbar = document.getElementById('bulkActionToolbar');
+    const selectedCountSpan = document.getElementById('selectedCount');
+
+    function toggleToolbar() {
+        const selected = document.querySelectorAll('.user-checkbox:checked').length;
+        if (selected > 0) {
+            bulkActionToolbar.style.display = 'block';
+            selectedCountSpan.innerText = selected;
+        } else {
+            bulkActionToolbar.style.display = 'none';
+        }
+    }
+
+    selectAllCheckbox.addEventListener('change', function() {
+        userCheckboxes.forEach(cb => cb.checked = this.checked);
+        toggleToolbar();
+    });
+
+    userCheckboxes.forEach(cb => {
+        cb.addEventListener('change', toggleToolbar);
+    });
+
+    // Helper: Masukkan ID yang dipilih ke dalam Form sebelum submit
+    window.prepareBulkInputs = function(containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; // Reset
+        document.querySelectorAll('.user-checkbox:checked').forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'user_ids[]';
+            input.value = cb.value;
+            container.appendChild(input);
+        });
+    }
+
+    // Logic Tombol Hapus Massal
+    window.confirmBulkDelete = function() {
+        Swal.fire({
+            title: 'Hapus User Terpilih?',
+            text: "User yang dipilih akan dihapus secara permanen.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Hapus Semua!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                prepareBulkInputs('bulkDeleteInputs');
+                document.getElementById('bulkDeleteForm').submit();
+            }
+        });
+    }
+
+    // --- 2. LOGIC TOOLTIP & SINGLE DELETE ---
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
 
-    // Konfirmasi Delete dengan SweetAlert
     document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.getAttribute('data-id');

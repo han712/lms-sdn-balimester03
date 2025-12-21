@@ -91,7 +91,7 @@ class AdminController extends Controller
             $rules += [
                 'nisn' => 'required|unique:users,nisn|max:20',
                 'nis' => 'nullable|unique:users,nis|max:20',
-                'kelas' => ['required', Rule::in(['1', '2', '3', '4', '5', '6'])],
+                'kelas' => ['required', Rule::in(config('lms.daftar_kelas'))],
                 'tahun_masuk' => 'required|digits:4',
                 'jenis_kelamin' => 'required|in:L,P',
                 'nama_ibu' => 'required|string',
@@ -188,7 +188,7 @@ class AdminController extends Controller
             $rules += [
                 'nisn' => ['required', Rule::unique('users')->ignore($user->id), 'max:20'],
                 'nis' => ['nullable', Rule::unique('users')->ignore($user->id)],
-                'kelas' => ['required', Rule::in(['1', '2', '3', '4', '5', '6'])],
+                'kelas' => ['required', Rule::in(config('lms.daftar_kelas'))],
                 'tahun_masuk' => 'required|digits:4',
             ];
         } elseif ($request->role == 'guru') {

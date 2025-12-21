@@ -48,9 +48,11 @@
                                     <label for="kelas">Kelas <span class="text-danger">*</span></label>
                                     <select class="form-control @error('kelas') is-invalid @enderror" id="kelas" name="kelas" required>
                                         <option value="">Pilih Kelas</option>
-                                        @foreach($kelasList as $k)
-                                            <option value="{{ $k }}" {{ old('kelas') == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
-                                        @endforeach
+                                    @foreach(config('lms.daftar_kelas') as $k)
+                                    <option value="{{ $k }}" {{ old('kelas') == $k ? 'selected' : '' }}>
+                                        Kelas {{ $k }}
+                                    </option>
+                                    @endforeach
                                     </select>
                                 </div>
                             </div>
