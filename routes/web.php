@@ -14,6 +14,9 @@ use App\Http\Controllers\Guru\GuruProfileController;
 use App\Http\Controllers\Siswa\SiswaController;
 use App\Http\Controllers\Siswa\SiswaProfileController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
+use App\Http\Controllers\Siswa\MateriController as SiswaMateri;
+use App\Http\Controllers\Siswa\KuisController as SiswaKuis;
+use App\Http\Controllers\Siswa\AbsensiController as SiswaAbsensi;
 
 
 Route::get('/', function () {
@@ -219,15 +222,17 @@ Route::middleware(['auth', 'verified', 'role:siswa'])
         Route::get('/profile/activity', [SiswaProfileController::class, 'activityLog'])->name('profile.activity');
 
         // 3. Materi & Kuis (SiswaController)
-        Route::get('/materi', [SiswaController::class, 'index'])->name('materi.index');
-        Route::get('/materi/{materi}', [SiswaController::class, 'show'])->name('materi.show');
+        Route::get('/materi', [SiswaMateri::class, 'index'])->name('materi.index');
+        Route::get('/materi/{materi}', [SiswaMateri::class, 'show'])->name('materi.show');
         
         // Submit Kuis
         Route::post('/materi/{materi}/submit-kuis', [SiswaController::class, 'submitKuis'])->name('materi.submit-kuis');
         
         // 4. Riwayat
-        Route::get('/riwayat-absensi', [SiswaController::class, 'riwayatAbsensi'])->name('riwayat-absensi');
-        Route::get('/riwayat-kuis', [SiswaController::class, 'riwayatKuis'])->name('riwayat-kuis');
+        Route::post('/materi/{materi}/submit-kuis', [SiswaKuis::class, 'store'])->name('materi.submit-kuis');
+        Route::get('/riwayat-kuis', [SiswaKuis::class, 'history'])->name('riwayat-kuis');
+
+        Route::get('/riwayat-absensi', [SiswaAbsensi::class, 'index'])->name('riwayat-absensi');
     });
 
 
