@@ -72,18 +72,18 @@ class MateriController extends Controller
     public function store(Request $request)
     {
         // FIX: Validasi disesuaikan dengan kolom database
-        $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'keterangan' => 'required|string', // FIX: deskripsi -> keterangan
-            'tipe' => 'required|in:materi,kuis',
-            'kelas' => 'required|in:1,2,3,4,5,6',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,png,mp4,avi|max:51200',
-            'link' => 'nullable|url|max:500',
-            'video' => 'nullable|url|max:500',
-            // FIX: Tambahkan tanggal (Wajib di DB)
-            'tanggal_mulai' => $request->tanggal_mulai ?? now(), 
-            'tanggal_selesai' => $request->tanggal_selesai,
-            'is_published' => $request->boolean('is_published'),
+       $validated = $request->validate([
+            'judul'           => 'required|string|max:255',
+            'keterangan'      => 'required|string',
+            'tipe'            => 'required|in:materi,kuis',
+            'kelas'           => 'required|in:1,2,3,4,5,6',
+            'file'            => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,png,mp4,avi|max:51200',
+            'link'            => 'nullable|url|max:500',
+            'video'           => 'nullable|url|max:500',
+            // Gunakan aturan validasi tanggal yang benar
+            'tanggal_mulai'   => 'nullable|date', 
+            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+            'is_published'    => 'nullable|boolean', // Cukup validasi tipe data
         ]);
 
         DB::beginTransaction();
@@ -92,25 +92,24 @@ class MateriController extends Controller
 
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
-                // Simpan ke folder public/materi/pembelajaran
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('materi/pembelajaran', $filename, 'public');
             }
 
-            // Create Data
+            // 2. LOGIC DEFAULT VALUE: Ditaruh di sini, saat create data
             $materi = Materi::create([
-                'guru_id' => Auth::id(),
-                'judul' => $validated['judul'],
-                'keterangan' => $validated['keterangan'], // FIX
-                'tipe' => 'materi', // Paksa tipe 'materi' di controller ini
-                'kelas' => $validated['kelas'],
-                'file' => $path, // FIX: file_path -> file
-                'link' => $request->link,
-                'video' => $request->video,
-                // FIX: Default tanggal_mulai = hari ini jika kosong, karena di DB not null
-                'tanggal_mulai' => $request->tanggal_mulai ?? now(),
+                'guru_id'         => Auth::id(),
+                'judul'           => $validated['judul'],
+                'keterangan'      => $validated['keterangan'],
+                'tipe'            => 'materi',
+                'kelas'           => $validated['kelas'],
+                'file'            => $path,
+                'link'            => $request->link,
+                'video'           => $request->video,
+                // Default tanggal dihandle di sini
+                'tanggal_mulai'   => $request->tanggal_mulai ?? now(), 
                 'tanggal_selesai' => $request->tanggal_selesai,
-                'is_published' => $request->boolean('is_published'),
+                'is_published'    => $request->boolean('is_published'), // Konversi boolean di sini
             ]);
 
             // Auto-create absensi jika langsung dipublish
@@ -123,7 +122,6 @@ class MateriController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Hapus file jika database gagal
             if ($path && Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
             }
@@ -131,20 +129,43 @@ class MateriController extends Controller
         }
     }
 
-    public function show(Materi $materi)
+    public function show($id)
     {
-        $this->authorizeMateri($materi);
-        
-        // Statistik Absensi Ringkas
-        $absensiStats = $materi->absensi()
-            ->selectRaw("COUNT(*) as total, SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as hadir")
-            ->first();
+        // 1. Ambil materi & relasi
+        $materi = Materi::with('guru')->findOrFail($id);
 
-        $persentaseKehadiran = ($absensiStats->total > 0) 
-            ? round(($absensiStats->hadir / $absensiStats->total) * 100, 2) 
-            : 0;
+        // 2. Cek hak akses
+        if ($materi->guru_id !== auth()->id()) {
+            abort(403, 'Akses ditolak.');
+        }
 
-        return view('guru.materi.show', compact('materi', 'absensiStats', 'persentaseKehadiran'));
+        // 3. Default statistik (Null jika bukan kuis)
+        $kuisStats = null;
+
+        // 4. Hitung Statistik HANYA jika tipe KUIS
+        if ($materi->tipe === 'kuis') {
+            $materi->load('jawabanKuis'); // Pastikan relasi di Model Materi sudah ada!
+
+            $total = $materi->jawabanKuis->count();
+            $dinilai = $materi->jawabanKuis->whereNotNull('nilai')->count();
+            
+            // Pakai null coalescing operator biar gak error kalau kosong
+            $rata = $total > 0 ? round($materi->jawabanKuis->avg('nilai'), 1) : 0;
+            $max = $total > 0 ? $materi->jawabanKuis->max('nilai') : 0;
+            $min = $total > 0 ? $materi->jawabanKuis->min('nilai') : 0;
+
+            // --- INI PERBAIKANNYA (Key disamakan dengan View) ---
+            $kuisStats = [
+                'total_jawaban'   => $total,
+                'sudah_dinilai'   => $dinilai,
+                'belum_dinilai'   => $total - $dinilai,
+                'rata_rata'       => $rata,
+                'nilai_tertinggi' => $max, // Tadi namanya 'tertinggi', sekarang 'nilai_tertinggi'
+                'nilai_terendah'  => $min, // Tadi namanya 'terendah', sekarang 'nilai_terendah'
+            ];
+        }
+
+        return view('guru.materi.show', compact('materi', 'kuisStats'));
     }
 
     public function edit(Materi $materi)
@@ -318,7 +339,7 @@ class MateriController extends Controller
             $data[] = [
                 'materi_id' => $materi->id,
                 'siswa_id' => $siswaId,
-                'status' => 'alpha', // Default alpha
+                'status' => 'tidak_hadir', 
                 'created_at' => $now,
                 'updated_at' => $now
             ];

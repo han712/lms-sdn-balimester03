@@ -18,7 +18,7 @@
                 <div class="p-4 p-md-5 text-white {{ $materi->tipe == 'kuis' ? 'bg-gradient-warning' : 'bg-gradient-primary' }}">
                     <div class="d-flex align-items-center mb-3">
                         <span class="badge bg-white text-dark me-2">{{ strtoupper($materi->tipe) }}</span>
-                        <span class="text-white-50 small"><i class="bi bi-clock"></i> Diposting {{ $item->created_at->diffForHumans() }}</span>
+                        <span class="text-white-50 small"><i class="bi bi-clock"></i> Diposting {{ $materi->created_at->diffForHumans() }}</span>
                     </div>
                     <h1 class="display-6 fw-bold mb-2">{{ $materi->judul }}</h1>
                     <div class="d-flex align-items-center">
@@ -38,7 +38,7 @@
                     </div>
 
                     <div class="mb-5 lh-lg text-dark">
-                        {!! nl2br(e($materi->deskripsi)) !!}
+                        {!! nl2br(e($materi->deskripsi ?? $materi->keterangan)) !!}
                     </div>
 
                     @if($materi->file_path)
@@ -83,9 +83,9 @@
                                         <div class="display-3 fw-bold {{ $existingAnswer->nilai >= 70 ? 'text-success' : 'text-danger' }}">
                                             {{ $existingAnswer->nilai }}
                                         </div>
-                                        @if($existingAnswer->komentar)
+                                        @if($existingAnswer->catatan_guru)
                                             <div class="alert alert-info mt-2 mb-0 py-2 small">
-                                                <strong>Catatan Guru:</strong> {{ $existingAnswer->komentar }}
+                                                <strong>Catatan Guru:</strong> {{ $existingAnswer->catatan_guru }}
                                             </div>
                                         @endif
                                     </div>

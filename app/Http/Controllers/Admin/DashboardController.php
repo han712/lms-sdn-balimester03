@@ -9,6 +9,7 @@ use App\Models\Materi;
 use App\Models\Absensi;
 use App\Models\JawabanKuis;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {

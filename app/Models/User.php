@@ -17,11 +17,22 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'nisn',
-        'nip',
-        'kelas',
         'is_active',
-        'last_activity'
+        
+        // Identity Keys
+        'nisn', 'nis', 'nip', 'id_pegawai',
+        
+        // Siswa
+        'kelas', 'tahun_masuk', 'tempat_lahir', 'tanggal_lahir', 
+        'jenis_kelamin', 'agama', 'nama_ayah', 'nama_ibu', 
+        'no_hp_ortu', 'pekerjaan_ortu',
+
+        // Guru
+        'status_kepegawaian', 'jabatan_tambahan', 'wali_kelas', 
+        'mata_pelajaran_utama', 'pendidikan_terakhir',
+
+        // Admin
+        'posisi', 'level_akses',
     ];
 
     protected $hidden = [
@@ -34,7 +45,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_active' => 'boolean', // Casting boolean agar aman
+            'tanggal_lahir' => 'date', // Biar otomatis jadi object Carbon
+            'is_active' => 'boolean',// Casting boolean agar aman
         ];
     }
 

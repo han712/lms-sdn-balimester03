@@ -27,8 +27,9 @@ class UpdateProfileRequest extends FormRequest
                 'numeric', 
                 Rule::unique(User::class)->ignore($this->user()->id)
             ],
-            // Email biasanya tidak diubah sembarangan di sistem sekolah, 
-            // tapi jika ingin divalidasi juga, tambahkan disini.
+            
+            'status_kepegawaian' => ['required'], // Tambah ini
+            'pendidikan_terakhir' => ['required']
         ];
     }
 
