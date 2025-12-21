@@ -147,9 +147,9 @@
                         @forelse($users as $index => $user)
                         <tr>
                             <td class="text-center px-3">
-                                @if(auth()->id() !== $user->id) 
+                                
                                     <input class="form-check-input user-checkbox" type="checkbox" value="{{ $user->id }}">
-                                @endif
+                            
                             </td>
                             <td class="text-center">{{ $users->firstItem() + $index }}</td>
                             <td>
@@ -269,9 +269,20 @@
                     </tbody>
                 </table>
             </div>
-            <div class="px-3 py-3 border-top">
-                {{ $users->links() }}
-            </div>
+            <div class="card-footer bg-white py-3 border-top d-flex align-items-center justify-content-between">
+        <div class="small text-muted">
+            Menampilkan 
+            <span class="fw-bold">{{ $users->firstItem() ?? 0 }}</span> 
+            sampai 
+            <span class="fw-bold">{{ $users->lastItem() ?? 0 }}</span> 
+            dari total 
+            <span class="fw-bold">{{ $users->total() }}</span> 
+            data
+        </div>
+        <div>
+            {{ $users->links() }}
+        </div>
+    </div>
         </div>
     </div>
 </div>

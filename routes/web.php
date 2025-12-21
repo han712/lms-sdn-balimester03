@@ -67,8 +67,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // User Management
         Route::get('users/create', [AdminController::class, 'create'])->name('users.create');
         Route::post('users', [AdminController::class, 'store'])->name('users.store');
-        Route::delete('/users/bulk-delete', [AdminController::class, 'bulkDelete'])->name('users.bulk-delete');
-        Route::post('/users/bulk-toggle-active', [AdminController::class, 'bulkToggleActive'])->name('users.bulk-toggle-active');
+        Route::delete('users/bulk-delete', [AdminController::class, 'bulkDelete'])->name('users.bulk-delete');
+        Route::post('users/bulk-toggle-active', [AdminController::class, 'bulkToggleActive'])->name('users.bulk-toggle-active');
 
         Route::resource('users', AdminController::class)->except(['create', 'store']);
 
@@ -79,10 +79,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
             ->name('users.reset-password');
         
         // Bulk Actions
-        Route::post('users/bulk-delete', [AdminController::class, 'bulkDelete'])
-            ->name('users.bulk-delete');
-        Route::post('users/bulk-toggle-active', [AdminController::class, 'bulkToggleActive'])
-            ->name('users.bulk-toggle-active');
+        // Route::post('users/bulk-delete', [AdminController::class, 'bulkDelete'])
+        //     ->name('users.bulk-delete');
+        // Route::post('users/bulk-toggle-active', [AdminController::class, 'bulkToggleActive'])
+        //     ->name('users.bulk-toggle-active');
         
         // Import/Export
         Route::post('users/import', [AdminController::class, 'importUsers'])
