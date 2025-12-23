@@ -18,7 +18,7 @@ return new class extends Migration
             
             $table->string('jabatan_tambahan')->nullable()->after('status_kepegawaian')
                   ->comment('Contoh: Kepala Sekolah, Wakasek, dll');
-
+            
             // Data Akademik
             $table->string('pendidikan_terakhir')->nullable()->after('jabatan_tambahan');
             $table->string('mata_pelajaran_utama')->nullable()->after('pendidikan_terakhir')
