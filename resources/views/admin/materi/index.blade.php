@@ -24,7 +24,7 @@
                     <div class="col-md-2 mb-2">
                         <select name="kelas" class="form-control">
                             <option value="">Semua Kelas</option>
-                            @foreach(range(1, 6) as $k)
+                            @foreach(config('lms.daftar_kelas') as $k)
                                 <option value="{{ $k }}" {{ request('kelas') == $k ? 'selected' : '' }}>Kelas {{ $k }}</option>
                             @endforeach
                         </select>
@@ -60,13 +60,13 @@
                             <th>Tipe</th>
                             <th>Status</th>
                             <th>Dibuat</th>
-                            <th>Aksi</th>
+                            <th style="min-width: 150px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($materi as $item)
                         <tr>
-                            <td>{{ $loop->iteration + $materi->firstItem() - 1 }}</td>
+                            <td class="text-center">{{ $loop->iteration + $materi->firstItem() - 1 }}</td>
                             <td>
                                 <strong>{{ $item->judul }}</strong>
                                 @if($item->file)
@@ -76,22 +76,39 @@
                             <td>{{ $item->guru->name ?? 'User Terhapus' }}</td>
                             <td>Kelas {{ $item->kelas }}</td>
                             <td>
-                                @if($item->tipe == 'kuis') <span class="badge badge-warning">Kuis</span>
-                                @else <span class="badge badge-info">Materi</span>
+                                @if($item->tipe == 'kuis') <span class="badge bg-warning text-dark">Kuis</span>
+                                @else <span class="badge bg-info text-white">Materi</span>
                                 @endif
                             </td>
                             <td>
-                                {!! $item->is_published ? '<span class="badge badge-success">Published</span>' : '<span class="badge badge-secondary">Draft</span>' !!}
+                                {!! $item->is_published ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-secondary">Draft</span>' !!}
                             </td>
                             <td>{{ $item->created_at->format('d/m/y') }}</td>
-                            <td>
-                                @if($item->file)
-                                <a href="{{ asset('storage/'.$item->file) }}" target="_blank" class="btn btn-sm btn-info" title="Download">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                                @else
-                                <span class="text-muted">-</span>
-                                @endif
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1">
+                                    {{-- Tombol Download (Jika ada file) --}}
+                                    @if($item->file)
+                                    <a href="{{ asset('storage/'.$item->file) }}" target="_blank" class="btn btn-sm btn-info" title="Download File">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    @endif
+                                    
+                                    {{-- Tombol Edit (BARU) --}}
+                                    <a href="{{ route('admin.materi.edit', $item->id) }}" class="btn btn-sm btn-warning" title="Edit Materi">
+                                        Edit    
+                                    <i class="fas fa-pencil-alt"></i>
+                                    </a>
+
+                                    {{-- Tombol Delete (Action Baru) --}}
+                                    <form action="{{ route('admin.materi.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus materi ini secara permanen?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Materi">
+                                            Delete
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         @empty

@@ -523,4 +523,68 @@ class AdminController extends Controller
             return back()->with('error', 'Gagal mengimport user: ' . $e->getMessage());
         }
     }
+    public function deleteMateri(Materi $materi)
+    {
+        DB::beginTransaction();
+        try {
+            // Hapus file fisiknya juga agar tidak nyampah
+            if ($materi->file && \Illuminate\Support\Facades\Storage::disk('public')->exists($materi->file)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($materi->file);
+            }
+            
+            $materi->delete();
+
+            DB::commit();
+            return back()->with('success', 'Materi berhasil dihapus.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal hapus: ' . $e->getMessage());
+        }
+    }
+    public function editMateri(Materi $materi)
+    {
+        return view('admin.materi.edit', compact('materi'));
+    }
+
+    /**
+     * Memproses Update Materi
+     */
+    public function updateMateri(Request $request, Materi $materi)
+    {
+        // Validasi input
+        $validated = $request->validate([
+            'judul'           => 'required|string|max:255',
+            'kelas'           => ['required', Rule::in(config('lms.daftar_kelas'))],
+            'tipe'            => 'required|in:materi,kuis',
+            'is_published'    => 'required|boolean',
+            'keterangan'      => 'nullable|string',
+            'link'            => 'nullable|url',
+            'video'           => 'nullable|url',
+            'file'            => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,png|max:10240',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Cek jika ada upload file baru
+            if ($request->hasFile('file')) {
+                // Hapus file lama fisik
+                if ($materi->file && \Illuminate\Support\Facades\Storage::disk('public')->exists($materi->file)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($materi->file);
+                }
+                // Simpan file baru
+                $path = $request->file('file')->store('materi', 'public');
+                $validated['file'] = $path;
+            }
+
+            $materi->update($validated);
+
+            DB::commit();
+            return redirect()->route('admin.materi.index')->with('success', 'Materi berhasil diperbarui!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal update: ' . $e->getMessage());
+        }
+    }
 }

@@ -93,7 +93,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // View All Materi
         Route::get('materi', [AdminController::class, 'allMateri'])
             ->name('materi.index');
-        
+
+        Route::get('materi/{materi}/edit', [AdminController::class, 'editMateri'])->name('materi.edit');
+        Route::put('materi/{materi}', [AdminController::class, 'updateMateri'])->name('materi.update');
+        Route::delete('materi/{materi}', [AdminController::class, 'deleteMateri'])->name('materi.destroy');
+
         // View All Absensi
         Route::get('absensi', [AdminController::class, 'allAbsensi'])
             ->name('absensi.index');
