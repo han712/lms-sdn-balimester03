@@ -18,6 +18,9 @@ use App\Http\Controllers\Siswa\MateriController as SiswaMateri;
 use App\Http\Controllers\Siswa\KuisController as SiswaKuis;
 use App\Http\Controllers\Siswa\AbsensiController as SiswaAbsensi;
 
+use App\Http\Controllers\Guru\PrediksiController;
+
+
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -44,6 +47,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/prediksi-remedial', [PrediksiController::class, 'index'])->name('prediksi.index');
+    Route::post('/prediksi-remedial', [PrediksiController::class, 'predict'])->name('prediksi.process');
 });
 
 /*
@@ -148,6 +154,9 @@ Route::middleware(['auth', 'verified', 'role:guru'])
         Route::get('profile', [GuruProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [GuruProfileController::class, 'update'])->name('profile.update');
         Route::put('password', [GuruProfileController::class, 'updatePassword'])->name('password.update');
+
+        Route::get('/prediksi-remedial', [PrediksiController::class, 'index'])->name('prediksi.index');
+        Route::post('/prediksi-remedial', [PrediksiController::class, 'predict'])->name('prediksi.process');
     });
 
 // Route::middleware(['auth', 'verified', 'role:guru'])

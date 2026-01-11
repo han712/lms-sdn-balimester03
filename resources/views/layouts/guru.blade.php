@@ -35,10 +35,16 @@
 
             <hr class="sidebar-divider my-0">
 
-            <li class="nav-item {{ request()->routeIs('guru.dashboard') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('guru.dashboard') }}">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Dashboard</span></a>
+           <!-- <hr class="sidebar-divider"> -->
+
+            <div class="sidebar-heading">
+                Fitur AI
+            </div>
+
+            <li class="nav-item {{ request()->routeIs('guru.prediksi.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('guru.prediksi.index') }}">
+                    <i class="fas fa-fw fa-brain"></i>
+                    <span>Prediksi Remedial</span></a>
             </li>
 
             <hr class="sidebar-divider">
