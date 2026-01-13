@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Guru; // <--- WAJIB GURU
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Http;
 
 class PrediksiController extends Controller
 {
@@ -30,33 +30,30 @@ class PrediksiController extends Controller
             return back()->with('error', 'Script Python tidak ditemukan di: ' . $scriptPath);
         }
 
-        // Command Python
-        $command = [
-            'python', // ganti 'python3' jika di server linux/mac
-            $scriptPath, 
-            $request->rata_nilai_kuis, 
-            $request->total_kuis_dikerjakan, 
-            $request->presentasi_kehadiran, 
-            $request->jumlah_tidak_hadir
-        ];
+        // Call prediction API instead of executing Python locally
+        $apiUrl = config('services.prediksi.url', env('PREDIKSI_API_URL', 'https://tika.gundar.id/predict'));
 
-        $result = Process::run($command);
+        try {
+            $response = Http::timeout(10)->post($apiUrl, [
+                'rata_kuis' => $request->rata_nilai_kuis,
+                'total_kuis' => $request->total_kuis_dikerjakan,
+                'kehadiran' => $request->presentasi_kehadiran,
+                'tidak_hadir' => $request->jumlah_tidak_hadir,
+            ]);
 
-        if ($result->successful()) {
-            $output = $result->output();
-            $data = json_decode($output, true);
-            
-            if (!$data) {
-                return back()->with('error', 'Output tidak valid: ' . $output);
+            if ($response->successful()) {
+                $data = $response->json();
+
+                if (isset($data['status']) && $data['status'] === 'error') {
+                    return back()->with('error', 'API Error: ' . ($data['message'] ?? 'Unknown'));
+                }
+
+                return back()->with('hasil', $data);
             }
 
-            if (isset($data['status']) && $data['status'] == 'error') {
-                return back()->with('error', 'Python Error: ' . $data['message']);
-            }
-
-            return back()->with('hasil', $data);
-        } else {
-            return back()->with('error', 'Gagal menjalankan Python: ' . $result->errorOutput());
+            return back()->with('error', "API request failed: HTTP {$response->status()} - {$response->body()}");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Request failed: ' . $e->getMessage());
         }
     }
 }
