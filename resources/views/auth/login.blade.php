@@ -1,64 +1,82 @@
 <x-guest-layout>
-    <div class="mb-4 text-center">
-        <h2 class="text-3xl font-bold text-gray-900">
-            <i class="bi bi-book-fill text-blue-600"></i> LMS SD
-        </h2>
-        <p class="mt-2 text-sm text-gray-600">Silakan login untuk melanjutkan</p>
-    </div>
-
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+    <div class="card card-login animate__animated animate__fadeInDown">
+        <div class="login-header">
+            <div class="mb-3">
+                <img src="{{ asset('img/logo-sekolah.png') }}" alt="Logo Sekolah" style="width: 80px; height: 80px; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            </div>
+            <h4 class="fw-bold mb-0">Selamat Datang</h4>
+            <p class="small text-white-50 mb-0">Silahkan login ke akun LMS Anda</p>
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+        <div class="card-body p-4 pt-5">
+            <x-auth-session-status class="mb-4 alert alert-success" :status="session('status')" />
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-            </label>
-        </div>
-
-        <div class="flex items-center justify-between mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
+            @if ($errors->any())
+                <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>
+                        <strong>Whoops!</strong> Ada kesalahan data.
+                    </div>
+                </div>
             @endif
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
-    </form>
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
 
-    <!-- Demo Credentials -->
-    <div class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-        <p class="text-xs font-semibold text-gray-700 mb-2">Demo Login:</p>
-        <div class="space-y-1 text-xs text-gray-600">
-            <div><strong>Admin:</strong> admin@lms.com / password</div>
-            <div><strong>Guru:</strong> siti@lms.com / password</div>
-            <div><strong>Siswa:</strong> ahmad@siswa.com / password</div>
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                           id="email" name="email" value="{{ old('email') }}" 
+                           placeholder="name@example.com" required autofocus>
+                    <label for="email"><i class="bi bi-envelope me-1"></i> Email Address</label>
+                    @error('email')
+                        <div class="invalid-feedback text-start ps-2">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-floating mb-3 position-relative">
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                           id="password" name="password" 
+                           placeholder="Password" required autocomplete="current-password"
+                           style="padding-right: 40px;">
+                    <label for="password"><i class="bi bi-lock me-1"></i> Password</label>
+                    
+                    <span onclick="togglePassword()" style="position: absolute; right: 15px; top: 18px; cursor: pointer; color: #6c757d; z-index: 10;">
+                        <i class="bi bi-eye" id="toggleIcon"></i>
+                    </span>
+
+                    @error('password')
+                        <div class="invalid-feedback text-start ps-2">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember_me" name="remember">
+                        <label class="form-check-label small text-muted" for="remember_me">
+                            Ingat Saya
+                        </label>
+                    </div>
+                    @if (Route::has('password.request'))
+                        <a class="small text-decoration-none fw-bold" href="{{ route('password.request') }}" style="color: #4e73df;">
+                            Lupa Password?
+                        </a>
+                    @endif
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary-custom rounded-pill text-white shadow-sm">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> MASUK SEKARANG
+                    </button>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p class="small text-muted">Belum punya akun? <a href="{{ route('register') }}" class="text-decoration-none fw-bold">Daftar disini</a></p>
+                </div>
+            </form>
         </div>
+    </div>
+    
+    <div class="text-center mt-3 text-muted small">
+        &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
     </div>
 </x-guest-layout>

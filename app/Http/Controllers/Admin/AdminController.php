@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Materi;
 use App\Models\Absensi;
+use App\Models\JawabanKuis;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-
 
 class AdminController extends Controller
 {
@@ -17,9 +18,9 @@ class AdminController extends Controller
     {
         $stats = [
             'total_users' => User::count(),
-            'total_admin' => User::Admin()->count(),
-            'total_guru' => User::guru()->count(),
-            'total_siswa' => User::siswa()->count(),
+            'total_admin' => User::where('role', 'admin')->count(),
+            'total_guru' => User::where('role', 'guru')->count(),
+            'total_siswa' => User::where('role', 'siswa')->count(),
             'total_materi' => Materi::count(),
             'total_kuis' => Materi::where('tipe', 'kuis')->count(),
             'total_absensi' => Absensi::count(),
@@ -27,36 +28,28 @@ class AdminController extends Controller
             'inactive_users' => User::where('is_active', false)->count(),
         ];
 
-        // Recent activities
         $recentUsers = User::latest()->take(5)->get();
         $recentMateri = Materi::with('guru')->latest()->take(5)->get();
 
         return view('admin.dashboard', compact('stats', 'recentUsers', 'recentMateri'));
     }
 
-    /**
-     * Display a listing of users.
-     */
     public function index(Request $request)
     {
         $query = User::query();
 
-        // Filter by role
         if ($request->filled('role')) {
             $query->where('role', $request->role);
         }
 
-        // Filter by kelas (for siswa)
         if ($request->filled('kelas')) {
             $query->where('kelas', $request->kelas);
         }
 
-        // Filter by active status
         if ($request->filled('is_active')) {
             $query->where('is_active', $request->is_active === '1');
         }
 
-        // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -67,168 +60,157 @@ class AdminController extends Controller
             });
         }
 
-        // Sort
         $sortBy = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
         $query->orderBy($sortBy, $sortDirection);
 
         $users = $query->paginate(20)->withQueryString();
 
-        // Statistics
-        $stats = [
-            'total' => User::count(),
-            'admin' => User::Admin()->count(),
-            'guru' => User::guru()->count(),
-            'siswa' => User::siswa()->count(),
-            'active' => User::where('is_active', true)->count(),
-            'inactive' => User::where('is_active', false)->count(),
-        ];
-
-        return view('admin.users.index', compact('users', 'stats'));
+        return view('admin.users.index', compact('users'));
     }
 
-    /**
-     * Show the form for creating a new user.
-     */
     public function create()
     {
         return view('admin.users.create');
     }
 
-    /**
-     * Store a newly created user in storage.
-     */
+    // --- PERBAIKAN DI METHOD STORE (GABUNGAN LOGIKA LU + FITUR BARU) ---
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // 1. Validasi Dasar (Wajib untuk semua)
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', Rule::in(['admin', 'guru', 'siswa'])],
-            'nisn' => ['nullable', 'string', 'max:20', 'unique:users,nisn'],
-            'nip' => ['nullable', 'string', 'max:30', 'unique:users,nip'],
-            'kelas' => ['required_if:role,siswa', 'nullable', Rule::in(['1', '2', '3', '4', '5', '6'])],
-            'is_active' => ['nullable', 'boolean'],
-        ], [
-            'name.required' => 'Nama wajib diisi',
-            'email.required' => 'Email wajib diisi',
-            'email.unique' => 'Email sudah digunakan',
-            'password.required' => 'Password wajib diisi',
-            'password.min' => 'Password minimal 8 karakter',
-            'password.confirmed' => 'Konfirmasi password tidak cocok',
-            'role.required' => 'Role wajib dipilih',
-            'nisn.unique' => 'NISN sudah digunakan',
-            'nip.unique' => 'NIP sudah digunakan',
-            'kelas.required_if' => 'Kelas wajib diisi untuk siswa',
-        ]);
+            'is_active' => ['nullable', 'boolean'], // Checkbox returns '1' or null
+        ];
+
+        // 2. Validasi Dinamis Berdasarkan Role (Ini tambahan baru yang penting)
+        if ($request->role == 'siswa') {
+            $rules += [
+                'nisn' => 'required|unique:users,nisn|max:20',
+                'nis' => 'nullable|unique:users,nis|max:20',
+                'kelas' => ['required', Rule::in(config('lms.daftar_kelas'))],
+                'tahun_masuk' => 'required|digits:4',
+                'jenis_kelamin' => 'required|in:L,P',
+                'nama_ibu' => 'required|string',
+                'tanggal_lahir' => 'required|date',
+            ];
+        } elseif ($request->role == 'guru') {
+            $rules += [
+                'nip' => 'required|unique:users,nip|max:30',
+                'status_kepegawaian' => 'required|in:PNS,GTY,GTT',
+                'pendidikan_terakhir' => 'required|string',
+                'mata_pelajaran_utama' => 'required|string',
+            ];
+        } elseif ($request->role == 'admin') {
+            $rules += [
+                'id_pegawai' => 'nullable|unique:users,id_pegawai',
+                'posisi' => 'nullable|string',
+            ];
+        }
+
+        $validated = $request->validate($rules);
 
         DB::beginTransaction();
-        
         try {
             $validated['password'] = Hash::make($validated['password']);
-            $validated['is_active'] = $request->has('is_active') ? true : false;
+            // Convert checkbox value to boolean
+            $validated['is_active'] = $request->has('is_active') || $request->input('is_active') == '1';
 
-            // Clear unnecessary fields based on role
+            // Bersihkan field yang tidak relevan dengan role yang dipilih
             if ($validated['role'] !== 'siswa') {
                 $validated['nisn'] = null;
                 $validated['kelas'] = null;
+                // Hapus field siswa lain dari array validated jika ada
+                unset($validated['nis'], $validated['tahun_masuk'], $validated['nama_ibu']); 
             }
             if ($validated['role'] !== 'guru') {
                 $validated['nip'] = null;
+                // Hapus field guru lain
+                unset($validated['status_kepegawaian'], $validated['mata_pelajaran_utama']);
             }
 
-            $user = User::create($validated);
+            User::create($validated);
 
             DB::commit();
+            return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan dengan data lengkap.');
 
-            return redirect()->route('admin.users.index')
-                ->with('success', 'User berhasil ditambahkan');
-                
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            return back()->withInput()
-                ->with('error', 'Gagal menambahkan user: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Display the specified user.
-     */
     public function show(User $user)
     {
         $user->load(['materi', 'absensi.materi', 'jawabanKuis.materi']);
         
-        // Statistics
         $stats = [];
-        
-        if ($user->isGuru()) {
+        if ($user->role == 'guru') {
             $stats = [
                 'total_materi' => $user->materi()->count(),
                 'materi_published' => $user->materi()->where('is_published', true)->count(),
                 'total_kuis' => $user->materi()->where('tipe', 'kuis')->count(),
             ];
-        } elseif ($user->isSiswa()) {
+        } elseif ($user->role == 'siswa') {
             $stats = [
                 'total_absensi' => $user->absensi()->count(),
                 'hadir' => $user->absensi()->where('status', 'hadir')->count(),
-                'tidak_hadir' => $user->absensi()->where('status', 'tidak_hadir')->count(),
                 'total_kuis_dijawab' => $user->jawabanKuis()->count(),
-                'kuis_dinilai' => $user->jawabanKuis()->sudahDinilai()->count(),
-                'rata_nilai' => $user->jawabanKuis()->sudahDinilai()->avg('nilai'),
+                'rata_nilai' => $user->jawabanKuis()->whereNotNull('nilai')->avg('nilai') ?? 0,
             ];
         }
         
         return view('admin.users.show', compact('user', 'stats'));
     }
 
-    /**
-     * Show the form for editing the specified user.
-     */
     public function edit(User $user)
     {
         return view('admin.users.edit', compact('user'));
     }
 
-    /**
-     * Update the specified user in storage.
-     */
+    // --- PERBAIKAN DI METHOD UPDATE (GABUNGAN LOGIKA LU + FITUR BARU) ---
     public function update(Request $request, User $user)
     {
-        $validated = $request->validate([
+        // 1. Validasi Dasar
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', Rule::in(['admin', 'guru', 'siswa'])],
-            'nisn' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
-            'nip' => ['nullable', 'string', 'max:30', Rule::unique('users')->ignore($user->id)],
-            'kelas' => ['required_if:role,siswa', 'nullable', Rule::in(['1', '2', '3', '4', '5', '6'])],
             'is_active' => ['nullable', 'boolean'],
-        ], [
-            'name.required' => 'Nama wajib diisi',
-            'email.required' => 'Email wajib diisi',
-            'email.unique' => 'Email sudah digunakan',
-            'password.min' => 'Password minimal 8 karakter',
-            'password.confirmed' => 'Konfirmasi password tidak cocok',
-            'role.required' => 'Role wajib dipilih',
-            'nisn.unique' => 'NISN sudah digunakan',
-            'nip.unique' => 'NIP sudah digunakan',
-            'kelas.required_if' => 'Kelas wajib diisi untuk siswa',
-        ]);
+        ];
+
+        // 2. Validasi Dinamis saat Update
+        if ($request->role == 'siswa') {
+            $rules += [
+                'nisn' => ['required', Rule::unique('users')->ignore($user->id), 'max:20'],
+                'nis' => ['nullable', Rule::unique('users')->ignore($user->id)],
+                'kelas' => ['required', Rule::in(config('lms.daftar_kelas'))],
+                'tahun_masuk' => 'required|digits:4',
+            ];
+        } elseif ($request->role == 'guru') {
+            $rules += [
+                'nip' => ['required', Rule::unique('users')->ignore($user->id), 'max:30'],
+                'status_kepegawaian' => 'required|in:PNS,GTY,GTT',
+            ];
+        }
+
+        $validated = $request->validate($rules);
 
         DB::beginTransaction();
-        
         try {
-            // Update password hanya jika diisi
             if ($request->filled('password')) {
                 $validated['password'] = Hash::make($validated['password']);
             } else {
                 unset($validated['password']);
             }
 
-            $validated['is_active'] = $request->has('is_active') ? true : false;
+            $validated['is_active'] = $request->has('is_active') || $request->input('is_active') == '1';
 
-            // Clear unnecessary fields based on role
+            // Bersihkan data yang tidak sesuai role
             if ($validated['role'] !== 'siswa') {
                 $validated['nisn'] = null;
                 $validated['kelas'] = null;
@@ -240,21 +222,14 @@ class AdminController extends Controller
             $user->update($validated);
 
             DB::commit();
+            return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui.');
 
-            return redirect()->route('admin.users.index')
-                ->with('success', 'User berhasil diupdate');
-                
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            return back()->withInput()
-                ->with('error', 'Gagal mengupdate user: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Gagal update: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Remove the specified user from storage.
-     */
     public function destroy(User $user)
     {
         // Prevent deleting self
@@ -285,9 +260,7 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Bulk delete users.
-     */
+    // --- FITUR BULK ACTION & EXPORT (TETAP DIPERTAHANKAN) ---
     public function bulkDelete(Request $request)
     {
         $request->validate([
@@ -326,34 +299,9 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Toggle user active status.
-     */
-    public function toggleActive(User $user)
-    {
-        // Prevent deactivating self
-        if ($user->id === auth()->id()) {
-            return back()->with('error', 'Tidak dapat menonaktifkan akun sendiri');
-        }
-
-        // Prevent deactivating last super admin
-        if ($user->isAdmin() && $user->is_active && User::Admin()->where('is_active', true)->count() === 1) {
-            return back()->with('error', 'Tidak dapat menonaktifkan super admin terakhir');
-        }
-
-        $user->update(['is_active' => !$user->is_active]);
-
-        $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        
-        return back()->with('success', "User berhasil {$status}");
-    }
-
-    /**
-     * Bulk toggle active status.
-     */
     public function bulkToggleActive(Request $request)
     {
-        $request->validate([
+         $request->validate([
             'user_ids' => ['required', 'array'],
             'user_ids.*' => ['exists:users,id'],
             'is_active' => ['required', 'boolean'],
@@ -382,12 +330,27 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Reset user password.
-     */
+    public function toggleActive(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Tidak dapat menonaktifkan akun sendiri');
+        }
+
+        // Prevent deactivating last super admin
+        if ($user->isAdmin() && $user->is_active && User::Admin()->where('is_active', true)->count() === 1) {
+            return back()->with('error', 'Tidak dapat menonaktifkan super admin terakhir');
+        }
+
+        $user->update(['is_active' => !$user->is_active]);
+
+        $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+        
+        return back()->with('success', "User berhasil {$status}");
+    }
+
     public function resetPassword(Request $request, User $user)
     {
-        $validated = $request->validate([
+       $validated = $request->validate([
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'password.required' => 'Password wajib diisi',
@@ -402,14 +365,10 @@ class AdminController extends Controller
         return back()->with('success', 'Password berhasil direset');
     }
 
-    /**
-     * View all materi from all guru.
-     */
     public function allMateri(Request $request)
     {
-        $query = Materi::with(['guru']);
-
-        // Filters
+        $query = Materi::with('guru');
+         // Filters
         if ($request->filled('guru_id')) {
             $query->where('guru_id', $request->guru_id);
         }
@@ -434,12 +393,12 @@ class AdminController extends Controller
         $guruList = User::guru()->orderBy('name')->get();
 
         return view('admin.materi.index', compact('materi', 'guruList'));
+        $materi = $query->latest()->paginate(20);
+        $guruList = User::where('role', 'guru')->get();
+        return view('admin.materi.index', compact('materi', 'guruList'));
     }
 
-    /**
-     * View all absensi.
-     */
-    public function allAbsensi(Request $request)
+    public function allAbsensi()
     {
         $query = Absensi::with(['siswa', 'materi.guru']);
 
@@ -457,16 +416,61 @@ class AdminController extends Controller
                 $request->start_date,
                 $request->end_date
             ]);
-        }
+            }
 
         $absensi = $query->orderBy('waktu_akses', 'desc')->paginate(20);
 
         return view('admin.absensi.index', compact('absensi'));
     }
 
-    /**
-     * Import users from CSV.
-     */
+    public function exportUsers(Request $request)
+    {
+        $query = User::query();
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        if ($request->filled('kelas')) {
+            $query->where('kelas', $request->kelas);
+        }
+
+        $users = $query->get();
+
+        $filename = "users_export_" . now()->format('YmdHis') . ".csv";
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function() use ($users) {
+            $file = fopen('php://output', 'w');
+            
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            fputcsv($file, ['ID', 'Nama', 'Email', 'Role', 'NISN', 'NIP', 'Kelas', 'Status', 'Dibuat']);
+
+            foreach ($users as $user) {
+                fputcsv($file, [
+                    $user->id,
+                    $user->name,
+                    $user->email,
+                    $user->role_name,
+                    $user->nisn ?? '-',
+                    $user->nip ?? '-',
+                    $user->kelas ?? '-',
+                    $user->is_active ? 'Aktif' : 'Nonaktif',
+                    $user->created_at->format('d/m/Y'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+    
     public function importUsers(Request $request)
     {
         $request->validate([
@@ -519,55 +523,68 @@ class AdminController extends Controller
             return back()->with('error', 'Gagal mengimport user: ' . $e->getMessage());
         }
     }
+    public function deleteMateri(Materi $materi)
+    {
+        DB::beginTransaction();
+        try {
+            // Hapus file fisiknya juga agar tidak nyampah
+            if ($materi->file && \Illuminate\Support\Facades\Storage::disk('public')->exists($materi->file)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($materi->file);
+            }
+            
+            $materi->delete();
+
+            DB::commit();
+            return back()->with('success', 'Materi berhasil dihapus.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal hapus: ' . $e->getMessage());
+        }
+    }
+    public function editMateri(Materi $materi)
+    {
+        return view('admin.materi.edit', compact('materi'));
+    }
 
     /**
-     * Export users to CSV.
+     * Memproses Update Materi
      */
-    public function exportUsers(Request $request)
+    public function updateMateri(Request $request, Materi $materi)
     {
-        $query = User::query();
+        // Validasi input
+        $validated = $request->validate([
+            'judul'           => 'required|string|max:255',
+            'kelas'           => ['required', Rule::in(config('lms.daftar_kelas'))],
+            'tipe'            => 'required|in:materi,kuis',
+            'is_published'    => 'required|boolean',
+            'keterangan'      => 'nullable|string',
+            'link'            => 'nullable|url',
+            'video'           => 'nullable|url',
+            'file'            => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,png|max:10240',
+        ]);
 
-        if ($request->filled('role')) {
-            $query->where('role', $request->role);
-        }
-
-        if ($request->filled('kelas')) {
-            $query->where('kelas', $request->kelas);
-        }
-
-        $users = $query->get();
-
-        $filename = "users_export_" . now()->format('YmdHis') . ".csv";
-        
-        $headers = [
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
-
-        $callback = function() use ($users) {
-            $file = fopen('php://output', 'w');
-            
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
-            fputcsv($file, ['ID', 'Nama', 'Email', 'Role', 'NISN', 'NIP', 'Kelas', 'Status', 'Dibuat']);
-
-            foreach ($users as $user) {
-                fputcsv($file, [
-                    $user->id,
-                    $user->name,
-                    $user->email,
-                    $user->role_name,
-                    $user->nisn ?? '-',
-                    $user->nip ?? '-',
-                    $user->kelas ?? '-',
-                    $user->is_active ? 'Aktif' : 'Nonaktif',
-                    $user->created_at->format('d/m/Y'),
-                ]);
+        DB::beginTransaction();
+        try {
+            // Cek jika ada upload file baru
+            if ($request->hasFile('file')) {
+                // Hapus file lama fisik
+                if ($materi->file && \Illuminate\Support\Facades\Storage::disk('public')->exists($materi->file)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($materi->file);
+                }
+                // Simpan file baru
+                $path = $request->file('file')->store('materi', 'public');
+                $validated['file'] = $path;
             }
 
-            fclose($file);
-        };
+            $materi->update($validated);
 
-        return response()->stream($callback, 200, $headers);
+            DB::commit();
+            return redirect()->route('admin.materi.index')->with('success', 'Materi berhasil diperbarui!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal update: ' . $e->getMessage());
+        }
     }
 }

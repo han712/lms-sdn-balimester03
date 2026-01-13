@@ -52,7 +52,7 @@ class AbsensiExport implements FromCollection, WithHeadings, WithMapping, Should
         $tanggal = $absensi->waktu_akses 
             ? Carbon::parse($absensi->waktu_akses)->translatedFormat('d F Y H:i') 
             : '-';
-
+        
         return [
             $no,
             $absensi->siswa->nisn ?? '-', // Pakai ?? untuk jaga2 kalau kosong

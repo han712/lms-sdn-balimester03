@@ -1,231 +1,256 @@
-@extends('layouts.app')
+@extends('layouts.app') {{-- Pastikan layout ini memuat Bootstrap & SB Admin 2 --}}
 
 @section('title', 'Dashboard Admin')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Dashboard Super Admin</h1>
-        <p class="mt-1 text-sm text-gray-600">Selamat datang, {{ auth()->user()->name }}</p>
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard Super Admin</h1>
+        {{-- Tanggal hari ini --}}
+        <span class="d-none d-sm-inline-block text-gray-600 small">{{ now()->format('d M Y') }}</span>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <!-- Total Users -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-blue-500 p-3">
-                            <i class="bi bi-people-fill text-white text-2xl"></i>
-                        </div>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-sm font-medium text-gray-500">Total Users</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $stats['total_users'] }}</p>
-                    </div>
-                </div>
-                <div class="mt-4 text-xs text-gray-500">
-                    <span class="text-green-600">{{ $stats['active_users'] }} Aktif</span> • 
-                    <span class="text-red-600">{{ $stats['inactive_users'] }} Nonaktif</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Guru -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-green-500 p-3">
-                            <i class="bi bi-person-badge-fill text-white text-2xl"></i>
-                        </div>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-sm font-medium text-gray-500">Total Guru</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $stats['total_guru'] }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Siswa -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-purple-500 p-3">
-                            <i class="bi bi-person-fill text-white text-2xl"></i>
-                        </div>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-sm font-medium text-gray-500">Total Siswa</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $stats['total_siswa'] }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Materi -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-orange-500 p-3">
-                            <i class="bi bi-journal-text text-white text-2xl"></i>
-                        </div>
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <p class="text-sm font-medium text-gray-500">Total Materi</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ $stats['total_materi'] }}</p>
-                    </div>
-                </div>
-                <div class="mt-4 text-xs text-gray-500">
-                    {{ $stats['total_kuis'] }} Kuis
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <!-- Siswa per Kelas -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Siswa per Kelas</h3>
-                <div class="space-y-3">
-                    @foreach($siswa_per_kelas as $kelas => $jumlah)
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-600">Kelas {{ $kelas }}</span>
-                            <span class="font-semibold text-gray-900">{{ $jumlah }} siswa</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $stats['total_siswa'] > 0 ? ($jumlah / $stats['total_siswa'] * 100) : 0 }}%"></div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        <!-- Absensi Chart -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistik Absensi</h3>
-                <div class="space-y-3">
-                    @foreach($absensi_chart['labels'] as $index => $label)
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-600">{{ $label }}</span>
-                            <span class="font-semibold text-gray-900">{{ $absensi_chart['data'][$index] }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full {{ $index == 0 ? 'bg-green-600' : ($index == 1 ? 'bg-red-600' : ($index == 2 ? 'bg-yellow-600' : 'bg-blue-600')) }}" 
-                                 style="width: {{ $stats['total_absensi'] > 0 ? ($absensi_chart['data'][$index] / $stats['total_absensi'] * 100) : 0 }}%"></div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Users -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">User Terbaru</h3>
-                    <a href="{{ route('admin.users.index') }}" class="text-sm text-blue-600 hover:text-blue-800">Lihat Semua →</a>
-                </div>
-                <div class="space-y-3">
-                    @forelse($recent_users as $user)
-                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
-                        <div class="flex items-center">
-                            <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-                                {{ substr($user->name, 0, 1) }}
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-gray-900">{{ $user->name }}</p>
-                                <p class="text-xs text-gray-500">{{ $user->email }}</p>
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Users</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_users'] }}</div>
+                            <div class="mt-2 small">
+                                <span class="text-success"><i class="fas fa-circle"></i> {{ $stats['active_users'] }} Aktif</span>
+                                <span class="text-danger ml-2"><i class="fas fa-circle"></i> {{ $stats['inactive_users'] }} Nonaktif</span>
                             </div>
                         </div>
-                        <span class="text-xs px-2 py-1 rounded-full {{ $user->role == 'super_admin' ? 'bg-red-100 text-red-800' : ($user->role == 'guru' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800') }}">
-                            {{ ucfirst(str_replace('_', ' ', $user->role)) }}
-                        </span>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
                     </div>
-                    @empty
-                    <p class="text-sm text-gray-500">Tidak ada data</p>
-                    @endforelse
                 </div>
             </div>
         </div>
 
-        <!-- Recent Materi -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Materi Terbaru</h3>
-                    <a href="{{ route('admin.materi.index') }}" class="text-sm text-blue-600 hover:text-blue-800">Lihat Semua →</a>
-                </div>
-                <div class="space-y-3">
-                    @forelse($recent_materi as $materi)
-                    <div class="py-2 border-b border-gray-100">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">{{ $materi->judul }}</p>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    <i class="bi bi-person"></i> {{ $materi->guru->name }} • 
-                                    <i class="bi bi-book"></i> Kelas {{ $materi->kelas }}
-                                </p>
-                            </div>
-                            <span class="text-xs px-2 py-1 rounded-full {{ $materi->tipe == 'kuis' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' }}">
-                                {{ ucfirst($materi->tipe) }}
-                            </span>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Guru</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_guru'] }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
                         </div>
                     </div>
-                    @empty
-                    <p class="text-sm text-gray-500">Tidak ada data</p>
-                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Siswa</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_siswa'] }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Konten</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_materi'] }}</div>
+                            <div class="mt-2 small text-muted">
+                                {{ $stats['total_kuis'] }} Kuis
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="mt-6 bg-white overflow-hidden shadow-sm rounded-lg">
-        <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Aksi Cepat</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <a href="{{ route('admin.users.create') }}" class="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
-                    <div class="text-center">
-                        <i class="bi bi-person-plus-fill text-2xl text-blue-600"></i>
-                        <p class="mt-2 text-sm font-medium text-blue-900">Tambah User</p>
+    <div class="row">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Distribusi Siswa per Kelas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="chartSiswaKelas"></canvas>
                     </div>
-                </a>
-                <a href="{{ route('admin.users.index') }}" class="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition">
-                    <div class="text-center">
-                        <i class="bi bi-people-fill text-2xl text-green-600"></i>
-                        <p class="mt-2 text-sm font-medium text-green-900">Kelola User</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Statistik Absensi Global</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4">
+                        <canvas id="chartAbsensi"></canvas>
                     </div>
-                </a>
-                <a href="{{ route('admin.materi.index') }}" class="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition">
-                    <div class="text-center">
-                        <i class="bi bi-journal-text text-2xl text-purple-600"></i>
-                        <p class="mt-2 text-sm font-medium text-purple-900">Lihat Materi</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">User Terbaru</h6>
+                    <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-primary shadow-sm">Lihat Semua</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recent_users as $user)
+                                <tr>
+                                    <td>
+                                        <span class="font-weight-bold">{{ $user->name }}</span><br>
+                                        <small class="text-muted">{{ $user->email }}</small>
+                                    </td>
+                                    <td>
+                                        @if($user->role == 'admin') <span class="badge badge-danger">Admin</span>
+                                        @elseif($user->role == 'guru') <span class="badge badge-success">Guru</span>
+                                        @else <span class="badge badge-info">Siswa</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($user->is_active)
+                                            <span class="badge badge-success">Aktif</span>
+                                        @else
+                                            <span class="badge badge-secondary">Nonaktif</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="3" class="text-center">Tidak ada data</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
-                </a>
-                <a href="{{ route('admin.absensi.index') }}" class="flex items-center justify-center p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition">
-                    <div class="text-center">
-                        <i class="bi bi-check2-square text-2xl text-orange-600"></i>
-                        <p class="mt-2 text-sm font-medium text-orange-900">Lihat Absensi</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Materi Terbaru</h6>
+                    <a href="{{ route('admin.materi.index') }}" class="btn btn-sm btn-primary shadow-sm">Lihat Semua</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Judul</th>
+                                    <th>Guru</th>
+                                    <th>Tipe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recent_materi as $materi)
+                                <tr>
+                                    <td>{{ $materi->judul }}</td>
+                                    <td>{{ $materi->guru->name ?? 'N/A' }}</td>
+                                    <td>
+                                        @if($materi->tipe == 'kuis') <span class="badge badge-warning">Kuis</span>
+                                        @else <span class="badge badge-primary">Materi</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="3" class="text-center">Tidak ada data</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
-                </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // --- Chart Siswa Per Kelas ---
+    var ctxKelas = document.getElementById("chartSiswaKelas");
+    var chartKelas = new Chart(ctxKelas, {
+        type: 'bar',
+        data: {
+            labels: ["Kelas 1", "Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"],
+            datasets: [{
+                label: "Jumlah Siswa",
+                backgroundColor: "#4e73df",
+                hoverBackgroundColor: "#2e59d9",
+                borderColor: "#4e73df",
+                data: [
+                    {{ $siswa_per_kelas[1] ?? 0 }},
+                    {{ $siswa_per_kelas[2] ?? 0 }},
+                    {{ $siswa_per_kelas[3] ?? 0 }},
+                    {{ $siswa_per_kelas[4] ?? 0 }},
+                    {{ $siswa_per_kelas[5] ?? 0 }},
+                    {{ $siswa_per_kelas[6] ?? 0 }},
+                ],
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // --- Chart Absensi ---
+    var ctxAbsensi = document.getElementById("chartAbsensi");
+    var chartAbsensi = new Chart(ctxAbsensi, {
+        type: 'doughnut',
+        data: {
+            labels: {!! json_encode($absensi_chart['labels']) !!},
+            datasets: [{
+                data: {!! json_encode($absensi_chart['data']) !!},
+                backgroundColor: ['#1cc88a', '#e74a3b', '#f6c23e', '#36b9cc'],
+                hoverBackgroundColor: ['#17a673', '#be2617', '#dda20a', '#2c9faf'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        },
+    });
+</script>
+@endpush
 @endsection

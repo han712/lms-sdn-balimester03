@@ -37,13 +37,22 @@ return [
     ],
 
     // Kelas Settings
-    'kelas' => [
-        1 => 'Kelas 1',
-        2 => 'Kelas 2',
-        3 => 'Kelas 3',
-        4 => 'Kelas 4',
-        5 => 'Kelas 5',
-        6 => 'Kelas 6',
+    // 'kelas' => [
+    //     1 => 'Kelas 1',
+    //     2 => 'Kelas 2',
+    //     3 => 'Kelas 3',
+    //     4 => 'Kelas 4',
+    //     5 => 'Kelas 5',
+    //     6 => 'Kelas 6',
+    // ],
+
+    'daftar_kelas' => [
+        '1A', '1B',
+        '2A', '2B',
+        '3A', '3B',
+        '4A', '4B',
+        '5A', '5B',
+        '6A', '6B',
     ],
 
     // Pagination

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\JawabanKuis;
 
 class Materi extends Model
 {
@@ -15,10 +16,12 @@ class Materi extends Model
     protected $fillable = [
         'guru_id',
         'judul',
-        'deskripsi',
-        'file_path',
-        'tipe', // materi / kuis
+        'keterangan', // Ganti 'deskripsi' jadi 'keterangan'
+        'file',       // Ganti 'file_path' jadi 'file'
+        'tipe',
         'kelas',
+        'tanggal_mulai',   // Tambahkan ini (belum ada di model sebelumnya)
+        'tanggal_selesai', // Tambahkan ini
         'is_published'
     ];
 
@@ -82,7 +85,10 @@ class Materi extends Model
         $this->increment('views_count');
     }
 
-
+    public static function getKelasOptions()
+    {
+        return [1, 2, 3, 4, 5, 6];
+    }
 
     public function guru() 
     { 
@@ -99,5 +105,9 @@ class Materi extends Model
     public function jawabanKuis()
     {
         return $this->hasMany(JawabanKuis::class, 'materi_id');
+    }
+    public function soals()
+    {
+        return $this->hasMany(Soal::class);
     }
 }

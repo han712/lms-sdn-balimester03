@@ -53,7 +53,7 @@ class SiswaController extends Controller
             'kuis_dijawab' => JawabanKuis::where('siswa_id', $siswa->id)->count(),
         ];
 
-        return view('siswa.materi.index', compact('materi', 'stats'));
+        return view('siswa.materi.show', compact('materi', 'stats'));
     }
 
     /**

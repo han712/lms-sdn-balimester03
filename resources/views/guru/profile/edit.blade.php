@@ -1,3 +1,4 @@
+{{-- resources/views/guru/edit.blade.php (atau sesuaikan lokasi file) --}}
 @extends('layouts.guru')
 
 @section('title', 'Edit Profil')
@@ -11,16 +12,17 @@
     <div class="row">
         <div class="col-lg-6">
             <div class="card shadow mb-4">
-                <div class="card-header py-3">
+                <div class="card-header py-3 border-left-primary">
                     <h6 class="m-0 font-weight-bold text-primary">Data Diri</h6>
                 </div>
                 <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{-- Alert Success Khusus Profil --}}
+                    @if(session('success') && !session('password_success')) 
+                    {{-- Kita bisa membedakan flash message session key di controller jika mau, 
+                         atau biarkan tampil di kedua sisi seperti logic standar Laravel --}}
+                        <div class="alert alert-success alert-dismissible fade show">
                             {{ session('success') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
                         </div>
                     @endif
 
@@ -29,31 +31,39 @@
                         @method('PUT')
 
                         <div class="form-group">
-                            <label for="name">Nama Lengkap</label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                   id="name" name="name" value="{{ old('name', auth()->user()->name) }}" required>
+                            <label for="name" class="font-weight-bold">Nama Lengkap</label>
+                            <input type="text" 
+                                   class="form-control @error('name') is-invalid @enderror" 
+                                   id="name" name="name" 
+                                   value="{{ old('name', $user->name ?? auth()->user()->name) }}" required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div class="form-group">
-                            <label for="nip">NIP (Nomor Induk Pegawai)</label>
-                            <input type="text" class="form-control @error('nip') is-invalid @enderror" 
-                                   id="nip" name="nip" value="{{ old('nip', auth()->user()->nip) }}" required>
-                            @error('nip')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                        <div class="form-group mb-3">
+                            <label for="nip" class="font-weight-bold">NIP (Nomor Induk Pegawai)</label>
+                            <input type="text" 
+                                   class="form-control bg-light
+                                   id="nip" name="nip" 
+                                   value="{{ $user->nip ?? auth()-> user()->nip }}" 
+                                   readonly 
+                                   title="Hubungi Admin untuk mengubah data ini"
+                                   >
+                            <small class="text-muted">
+                             <i class="bi bi-lock-fill"></i> Data terkunci. Hanya Admin yang dapat mengubah.
+                            </small>
                         </div>
 
                         <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" class="form-control" value="{{ auth()->user()->email }}" disabled>
-                            <small class="text-muted">Email tidak dapat diubah.</small>
+                            <label class="font-weight-bold">Email</label>
+                            <input type="email" class="form-control bg-light" 
+                                   value="{{ auth()->user()->email }}" disabled readonly>
+                            <small class="text-muted"><i class="fas fa-info-circle"></i> Email tidak dapat diubah demi keamanan akun.</small>
                         </div>
 
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Simpan Profil
+                            <i class="fas fa-save mr-1"></i> Simpan Profil
                         </button>
                     </form>
                 </div>
@@ -62,7 +72,7 @@
 
         <div class="col-lg-6">
             <div class="card shadow mb-4">
-                <div class="card-header py-3">
+                <div class="card-header py-3 border-left-danger">
                     <h6 class="m-0 font-weight-bold text-danger">Ganti Password</h6>
                 </div>
                 <div class="card-body">
@@ -71,17 +81,21 @@
                         @method('PUT')
 
                         <div class="form-group">
-                            <label for="current_password">Password Saat Ini</label>
-                            <input type="password" class="form-control @error('current_password') is-invalid @enderror" 
+                            <label for="current_password" class="font-weight-bold">Password Saat Ini</label>
+                            <input type="password" 
+                                   class="form-control @error('current_password') is-invalid @enderror" 
                                    id="current_password" name="current_password" required>
                             @error('current_password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
+                        <hr>
+
                         <div class="form-group">
-                            <label for="new_password">Password Baru</label>
-                            <input type="password" class="form-control @error('new_password') is-invalid @enderror" 
+                            <label for="new_password" class="font-weight-bold">Password Baru</label>
+                            <input type="password" 
+                                   class="form-control @error('new_password') is-invalid @enderror" 
                                    id="new_password" name="new_password" required>
                             @error('new_password')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -89,13 +103,13 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="new_password_confirmation">Konfirmasi Password Baru</label>
+                            <label for="new_password_confirmation" class="font-weight-bold">Konfirmasi Password Baru</label>
                             <input type="password" class="form-control" 
                                    id="new_password_confirmation" name="new_password_confirmation" required>
                         </div>
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-key"></i> Ganti Password
+                            <i class="fas fa-key mr-1"></i> Ganti Password
                         </button>
                     </form>
                 </div>

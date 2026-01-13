@@ -188,64 +188,74 @@
                     </div>
                     <div class="card-body">
                         @if($kuisStats)
-                        <div class="row text-center mb-3">
-                            <div class="col-md-3">
-                                <div class="p-3 border rounded">
-                                    <h4>{{ $kuisStats['total_jawaban'] }}</h4>
-                                    <small class="text-muted">Total Jawaban</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="p-3 border rounded">
-                                    <h4 class="text-success">{{ $kuisStats['sudah_dinilai'] }}</h4>
-                                    <small class="text-muted">Sudah Dinilai</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="p-3 border rounded">
-                                    <h4 class="text-warning">{{ $kuisStats['belum_dinilai'] }}</h4>
-                                    <small class="text-muted">Belum Dinilai</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="p-3 border rounded">
-                                    <h4 class="text-info">{{ number_format($kuisStats['rata_rata'], 1) }}</h4>
-                                    <small class="text-muted">Rata-rata</small>
-                                </div>
-                            </div>
+<div class="row mb-4 animate__animated animate__fadeIn">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Mengumpulkan</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $kuisStats['total_jawaban'] }} Siswa</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Sudah Dinilai</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $kuisStats['sudah_dinilai'] }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Rata-rata Nilai</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $kuisStats['rata_rata'] }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Min / Max Nilai</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ $kuisStats['nilai_terendah'] }} / {{ $kuisStats['nilai_tertinggi'] }}
                         </div>
-
-                        <hr>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>Statistik Nilai:</h6>
-                                <ul class="list-unstyled">
-                                    <li><i class="fas fa-arrow-up text-success"></i> Tertinggi: <strong>{{ $kuisStats['nilai_tertinggi'] }}</strong></li>
-                                    <li><i class="fas fa-arrow-down text-danger"></i> Terendah: <strong>{{ $kuisStats['nilai_terendah'] }}</strong></li>
-                                    <li><i class="fas fa-chart-line text-info"></i> Rata-rata: <strong>{{ number_format($kuisStats['rata_rata'], 1) }}</strong></li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>Pengumpulan:</h6>
-                                <div class="progress mb-2" style="height: 25px;">
-                                    <div class="progress-bar" role="progressbar" 
-                                         style="width: {{ $kuisStats['persentase_pengumpulan'] }}%">
-                                        {{ $kuisStats['persentase_pengumpulan'] }}%
-                                    </div>
-                                </div>
-                                <small class="text-muted">
-                                    {{ $kuisStats['total_jawaban'] }} dari {{ $kuisStats['total_siswa_kelas'] }} siswa
-                                </small>
-                            </div>
-                        </div>
-
-                        @if(!empty($kuisStats['distribusi_nilai']))
-                        <hr>
-                        <h6>Distribusi Nilai:</h6>
-                        <canvas id="chartDistribusiNilai" height="100"></canvas>
-                        @endif
-                        @endif
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-trophy fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
                     </div>
                 </div>
             @endif
