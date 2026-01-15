@@ -63,7 +63,7 @@
                                 </span>
                             @else
                                 <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill">
-                                    <i class="bi bi-x-circle-fill me-1"></i> Alpha
+                                    <i class="bi bi-x-circle-fill me-1"></i> tidak_hadir
                                 </span>
                             @endif
                         </td>

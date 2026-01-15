@@ -24,8 +24,10 @@
                             <label>Kelas <span class="text-danger">*</span></label>
                             <select name="kelas" class="form-control" required>
                                 <option value="">Pilih Kelas</option>
-                                @foreach(range(1, 6) as $k)
-                                    <option value="{{ $k }}">Kelas {{ $k }} SD</option>
+                                @foreach($kelasList as $k)
+                                    <option value="{{ $k }}"{{ old('kelas') == $k ? 'selected' : '' }}>
+                                        Kelas {{ $k }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>

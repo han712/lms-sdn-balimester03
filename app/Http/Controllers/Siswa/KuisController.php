@@ -13,7 +13,7 @@ use Carbon\Carbon;
 class KuisController extends Controller
 {
     /**
-     * Logic Submit Jawaban (Support File Upload & Soal Interaktif)
+     * Submit Jawaban Kuis (PG auto nilai, Essay menunggu guru)
      */
     public function store(Request $request, $id)
     {
@@ -31,36 +31,81 @@ class KuisController extends Controller
         $existing = JawabanKuis::where('materi_id', $materi->id)
             ->where('siswa_id', $siswa->id)
             ->exists();
-            
+
         if ($existing) return back()->with('error', 'Kamu sudah mengirim jawaban sebelumnya.');
 
         try {
             DB::beginTransaction();
 
-            // SKENARIO A: KUIS INTERAKTIF (Ada Soal di DB)
+            // =========================
+            // SKENARIO A: KUIS INTERAKTIF (ada soal)
+            // =========================
             if ($materi->soals->count() > 0) {
-                $totalNilai = 0;
+
+                // Minimal validasi: harus ada array jawaban
+                $request->validate([
+                    'jawaban' => 'required|array',
+                ]);
+
+                $detailJawaban = [];
+                $totalBobotPG = 0;
+                $skorPG = 0;
+                $adaEssay = false;
+
                 foreach ($materi->soals as $soal) {
                     $jawabanInput = $request->input('jawaban.' . $soal->id);
-                    // Cek Pilihan Ganda
-                    if ($soal->tipe_soal == 'pilihan_ganda') {
-                        if (strtoupper($jawabanInput) == strtoupper($soal->kunci_jawaban)) {
-                            $totalNilai += $soal->bobot_nilai;
-                        }
+
+                    // simpan detail jawaban (PG + Essay)
+                    $detailJawaban[$soal->id] = [
+                        'tipe' => $soal->tipe_soal,
+                        'jawaban' => $jawabanInput,
+                        'kunci' => $soal->kunci_jawaban,
+                        'bobot' => (int) $soal->bobot_nilai,
+                    ];
+
+                    // ESSAY: tidak dinilai otomatis
+                    if ($soal->tipe_soal === 'essay') {
+                        $adaEssay = true;
+                        continue;
+                    }
+
+                    // PG: dihitung otomatis
+                    $totalBobotPG += (int) $soal->bobot_nilai;
+
+                    if ($jawabanInput !== null && strtoupper(trim($jawabanInput)) === strtoupper(trim($soal->kunci_jawaban))) {
+                        $skorPG += (int) $soal->bobot_nilai;
                     }
                 }
 
+                // Nilai:
+                // - kalau ada essay -> NULL (menunggu guru)
+                // - kalau semua PG -> nilai 0-100 (lebih enak dibanding jumlah bobot)
+                $nilaiAkhir = null;
+
+                if (!$adaEssay) {
+                    $nilaiAkhir = $totalBobotPG > 0
+                        ? round(($skorPG / $totalBobotPG) * 100)
+                        : 0;
+                }
+
                 JawabanKuis::create([
-                    'materi_id' => $materi->id,
-                    'siswa_id' => $siswa->id,
-                    'nilai' => $totalNilai, // Nilai langsung keluar
-                    'catatan_guru' => 'Nilai otomatis oleh sistem.',
+                    'materi_id'     => $materi->id,
+                    'siswa_id'      => $siswa->id,
+                    'jawaban'       => $detailJawaban, // pastikan kolom jawaban json & model cast array
+                    'nilai'         => $nilaiAkhir,
+                    'catatan_guru'  => $adaEssay ? null : 'Nilai otomatis oleh sistem (PG).',
+                    // kalau kamu punya kolom status, boleh aktifkan:
+                    // 'status' => $adaEssay ? 'menunggu_penilaian' : 'selesai',
                 ]);
-                
-                $msg = 'Jawaban terkirim! Nilai kamu: ' . $totalNilai;
-            } 
-            
+
+                $msg = $adaEssay
+                    ? 'Jawaban terkirim! Menunggu penilaian guru untuk soal essay.'
+                    : 'Jawaban terkirim! Nilai kamu: ' . $nilaiAkhir;
+            }
+
+            // =========================
             // SKENARIO B: TUGAS UPLOAD FILE (Manual)
+            // =========================
             else {
                 $request->validate([
                     'file_jawaban' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
@@ -72,11 +117,11 @@ class KuisController extends Controller
                 $path = $file->storeAs('jawaban_kuis', $filename, 'public');
 
                 JawabanKuis::create([
-                    'materi_id' => $materi->id,
-                    'siswa_id' => $siswa->id,
-                    'jawaban_file' => $path,
+                    'materi_id'     => $materi->id,
+                    'siswa_id'      => $siswa->id,
+                    'jawaban_file'  => $path,
                     'catatan_siswa' => $request->catatan,
-                    'nilai' => null // Menunggu guru
+                    'nilai'         => null
                 ]);
 
                 $msg = 'Tugas berhasil diupload! Menunggu penilaian guru.';
@@ -100,7 +145,7 @@ class KuisController extends Controller
             ->where('siswa_id', Auth::id())
             ->latest()
             ->paginate(15);
-            
+
         $stats = [
             'total_kuis' => $riwayat->total(),
             'rata_rata' => JawabanKuis::where('siswa_id', Auth::id())->avg('nilai') ?? 0,

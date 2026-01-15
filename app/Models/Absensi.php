@@ -35,7 +35,7 @@ class Absensi extends Model
     const STATUS_HADIR = 'hadir';
     const STATUS_SAKIT = 'sakit';
     const STATUS_IZIN = 'izin';
-    const STATUS_ALPHA = 'tidak_hadir'; // Sesuaikan dengan enum di migrasi (hadir, tidak_hadir, sakit, izin)
+    const STATUS_tidak_hadir = 'tidak_hadir'; // Sesuaikan dengan enum di migrasi (hadir, tidak_hadir, sakit, izin)
 
     /**
      * Boot method for model events
@@ -147,7 +147,7 @@ class Absensi extends Model
             self::STATUS_HADIR => '<span class="badge bg-success">Hadir</span>',
             self::STATUS_SAKIT => '<span class="badge bg-warning">Sakit</span>',
             self::STATUS_IZIN => '<span class="badge bg-info">Izin</span>',
-            'tidak_hadir' => '<span class="badge bg-danger">Alpha</span>', // Sesuaikan enum
+            'tidak_hadir' => '<span class="badge bg-danger">tidak_hadir</span>', // Sesuaikan enum
             default => '<span class="badge bg-secondary">Unknown</span>',
         };
     }

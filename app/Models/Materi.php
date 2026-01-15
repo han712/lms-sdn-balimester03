@@ -54,7 +54,7 @@ class Materi extends Model
     }
     public function getFileUrlAttribute()
     {
-        return $this->file_path ? asset('storage/' . $this->file_path) : null;
+         return $this->file ? asset('storage/' . $this->file) : null;
     }
 
     public function getFileSizeFormatAttribute()
@@ -108,6 +108,6 @@ class Materi extends Model
     }
     public function soals()
     {
-        return $this->hasMany(Soal::class);
+        return $this->hasMany(Soal::class, 'materi_id', 'id');
     }
 }

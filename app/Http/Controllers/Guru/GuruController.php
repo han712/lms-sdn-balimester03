@@ -49,13 +49,13 @@ class GuruController extends Controller
                 SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as hadir,
                 SUM(CASE WHEN status = 'izin' THEN 1 ELSE 0 END) as izin,
                 SUM(CASE WHEN status = 'sakit' THEN 1 ELSE 0 END) as sakit,
-                SUM(CASE WHEN status = 'alpha' THEN 1 ELSE 0 END) as alpha
+                SUM(CASE WHEN status = 'tidak_hadir' THEN 1 ELSE 0 END) as tidak_hadir
             ")
             ->first();
 
         $stats['total_absensi'] = $absensiStats->total ?? 0;
         $stats['absensi_hadir'] = $absensiStats->hadir ?? 0;
-        $stats['absensi_alpha'] = $absensiStats->alpha ?? 0;
+        $stats['absensi_tidak_hadir'] = $absensiStats->tidak_hadir ?? 0;
 
         // Statistik kuis
         $kuisStats = JawabanKuis::whereHas('materi', fn($q) => $q->where('guru_id', $guruId))
@@ -150,16 +150,16 @@ class GuruController extends Controller
             ->take(5)
             ->get();
 
-        // Siswa yang perlu perhatian (banyak alpha)
+        // Siswa yang perlu perhatian (banyak tidak_hadir)
         $siswaPerluPerhatian = Absensi::with('siswa')
             ->whereHas('materi', fn($q) => $q->where('guru_id', $guruId))
-            ->where('status', 'alpha')
+            ->where('status', 'tidak_hadir')
             ->whereMonth('waktu_akses', $currentMonth)
             ->whereYear('waktu_akses', $currentYear)
-            ->select('siswa_id', DB::raw('count(*) as total_alpha'))
+            ->select('siswa_id', DB::raw('count(*) as total_tidak_hadir'))
             ->groupBy('siswa_id')
-            ->having('total_alpha', '>=', 3)
-            ->orderByDesc('total_alpha')
+            ->having('total_tidak_hadir', '>=', 3)
+            ->orderByDesc('total_tidak_hadir')
             ->take(5)
             ->get();
 
@@ -278,7 +278,7 @@ class GuruController extends Controller
     {
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
-            'deskripsi' => 'required|string|max:5000',
+            'keterangan' => 'required|string|max:5000',
             'tipe' => 'required|in:materi,kuis',
             'kelas' => 'required|in:1,2,3,4,5,6',
             'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4,avi|max:51200',
@@ -375,7 +375,7 @@ class GuruController extends Controller
                 SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as hadir,
                 SUM(CASE WHEN status = 'izin' THEN 1 ELSE 0 END) as izin,
                 SUM(CASE WHEN status = 'sakit' THEN 1 ELSE 0 END) as sakit,
-                SUM(CASE WHEN status = 'alpha' THEN 1 ELSE 0 END) as alpha
+                SUM(CASE WHEN status = 'tidak_hadir' THEN 1 ELSE 0 END) as tidak_hadir
             ")
             ->first();
 
@@ -746,7 +746,7 @@ class GuruController extends Controller
             'hadir' => $materi->absensi()->where('status', 'hadir')->count(),
             'izin' => $materi->absensi()->where('status', 'izin')->count(),
             'sakit' => $materi->absensi()->where('status', 'sakit')->count(),
-            'alpha' => $materi->absensi()->where('status', 'alpha')->count(),
+            'tidak_hadir' => $materi->absensi()->where('status', 'tidak_hadir')->count(),
         ];
 
         return view('guru.absensi.index', compact('materi', 'siswa', 'summary'));
@@ -759,7 +759,7 @@ class GuruController extends Controller
         $validated = $request->validate([
             'absensi' => 'required|array',
             'absensi.*.siswa_id' => 'required|exists:users,id',
-            'absensi.*.status' => 'required|in:hadir,izin,sakit,alpha',
+            'absensi.*.status' => 'required|in:hadir,izin,sakit,tidak_hadir',
         ]);
 
         try {
@@ -877,7 +877,7 @@ class GuruController extends Controller
     }
 
     /**
-     * Membuat record absensi awal (default: alpha) untuk semua siswa di kelas
+     * Membuat record absensi awal (default: tidak_hadir) untuk semua siswa di kelas
      * saat materi dipublish. Ini memudahkan tracking siapa yang belum buka.
      */
     private function createAbsensiForMateri(Materi $materi)
@@ -896,7 +896,7 @@ class GuruController extends Controller
             $absensiData[] = [
                 'materi_id' => $materi->id,
                 'siswa_id' => $siswa->id,
-                'status' => 'alpha', // Default alpha sampai siswa membuka materi
+                'status' => 'tidak_hadir', // Default tidak_hadir sampai siswa membuka materi
                 'waktu_akses' => null, // Belum akses
                 'created_at' => $now,
                 'updated_at' => $now,

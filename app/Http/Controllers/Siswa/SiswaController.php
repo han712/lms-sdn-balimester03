@@ -73,6 +73,8 @@ class SiswaController extends Controller
         $absensi = Absensi::where('materi_id', $materi->id)
             ->where('siswa_id', $siswa->id)
             ->first();
+        
+        $now = Carbon::now();
 
         if (!$absensi) {
             // Jika belum ada, buat baru (Hadir)
@@ -80,15 +82,17 @@ class SiswaController extends Controller
                 'materi_id' => $materi->id,
                 'siswa_id' => $siswa->id,
                 'status' => 'hadir',
-                'waktu_akses' => Carbon::now(),
+                'waktu_akses' => $now,
             ]);
-        } elseif ($absensi->status == 'alpha') {
-            // Jika status sebelumnya alpha (dibuat otomatis oleh sistem), ubah jadi hadir
+        } else {
+            // Jika status sebelumnya tidak_hadir (dibuat otomatis oleh sistem), ubah jadi hadir
+            if ($absensi->status === 'tidak_hadir' || $absensi->waktu_akses === null) {
             $absensi->update([
                 'status' => 'hadir',
-                'waktu_akses' => Carbon::now(),
+                'waktu_akses' => $now,
             ]);
-        }
+            }
+    }
 
         // 3. Cek Status Kuis (Jika tipe kuis)
         $existingAnswer = null;

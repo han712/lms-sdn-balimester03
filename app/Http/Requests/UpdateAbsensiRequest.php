@@ -25,7 +25,7 @@ class UpdateAbsensiRequest extends FormRequest
     {
         return [
             'siswa_id' => 'required|exists:users,id',
-            'status' => 'required|in:hadir,izin,sakit,alpha',
+            'status' => 'required|in:hadir,izin,sakit,tidak_hadir',
             'keterangan' => 'nullable|string|max:500'
         ];
     }
@@ -35,7 +35,7 @@ class UpdateAbsensiRequest extends FormRequest
             'siswa_id.required' => 'Siswa wajib dipilih',
             'siswa_id.exists' => 'Siswa tidak ditemukan',
             'status.required' => 'Status absensi wajib dipilih',
-            'status.in' => 'Status harus: hadir, izin, sakit, atau alpha'
+            'status.in' => 'Status harus: hadir, izin, sakit, atau tidak_hadir'
         ];
     }
 }

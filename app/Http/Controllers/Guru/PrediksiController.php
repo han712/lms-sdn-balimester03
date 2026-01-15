@@ -24,22 +24,25 @@ class PrediksiController extends Controller
         ]);
 
         // Pastikan path ini benar sesuai lokasi file Anda menaruh predict.py
-        $scriptPath = storage_path('app/python/predict.py');
+        // $scriptPath = storage_path('app/python/predict.py');
         
-        if (!file_exists($scriptPath)) {
-            return back()->with('error', 'Script Python tidak ditemukan di: ' . $scriptPath);
-        }
+        // if (!file_exists($scriptPath)) {
+        //     return back()->with('error', 'Script Python tidak ditemukan di: ' . $scriptPath);
+        // }
 
-        // Call prediction API instead of executing Python locally
+        // Call prediction API instead of executing Python locallyF
         $apiUrl = config('services.prediksi.url', env('PREDIKSI_API_URL', 'https://tika.gundar.id/predict'));
 
         try {
-            $response = Http::timeout(10)->post($apiUrl, [
+            // Prepare payload and send request
+            $payload = [
                 'rata_kuis' => $request->rata_nilai_kuis,
                 'total_kuis' => $request->total_kuis_dikerjakan,
                 'kehadiran' => $request->presentasi_kehadiran,
                 'tidak_hadir' => $request->jumlah_tidak_hadir,
-            ]);
+            ];
+
+            $response = Http::timeout(10)->post($apiUrl, $payload);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -54,6 +57,20 @@ class PrediksiController extends Controller
             return back()->with('error', "API request failed: HTTP {$response->status()} - {$response->body()}");
         } catch (\Exception $e) {
             return back()->with('error', 'Request failed: ' . $e->getMessage());
+        } finally {
+            // Clear sensitive/temporary variables
+            if (isset($payload)) {
+                unset($payload);
+            }
+            if (isset($data)) {
+                unset($data);
+            }
+            if (isset($response)) {
+                unset($response);
+            }
+            if (isset($apiUrl)) {
+                unset($apiUrl);
+            }
         }
     }
 }

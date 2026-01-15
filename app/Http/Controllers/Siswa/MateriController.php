@@ -31,31 +31,26 @@ class MateriController extends Controller
     }
 
     public function show($id)
-    {
-        // PERBAIKAN 1: Tambahkan 'soals' di sini agar data soal terbawa
-        $materi = Materi::with(['guru', 'soals'])->findOrFail($id);
+{
+    $materi = \App\Models\Materi::with('guru')->findOrFail($id);
 
-        if ($materi->kelas != Auth::user()->kelas) {
-            abort(403, 'Materi ini bukan untuk kelas Anda.');
-        }
+    // ambil soal dari tabel soals
+    $soals = \App\Models\Soal::where('materi_id', $materi->id)->get();
 
-        // Catat Absensi (Hadir)
-        Absensi::firstOrCreate([
-            'siswa_id' => Auth::id(),
-            'materi_id' => $materi->id,
-        ], [
-            'status' => 'hadir',
-            'waktu_akses' => now(),
-        ]);
-
-        // Cek apakah siswa sudah pernah mengerjakan kuis ini
-        $existingAnswer = JawabanKuis::where('materi_id', $materi->id)
-            ->where('siswa_id', Auth::id())
+    // ambil jawaban kuis siswa (kalau sudah pernah mengerjakan)
+    $jawabanKuis = null;
+    if ($materi->tipe === 'kuis') {
+        $jawabanKuis = \App\Models\JawabanKuis::where('materi_id', $materi->id)
+            ->where('siswa_id', auth()->id())
             ->first();
-
-        return view('siswa.materi.show', compact('materi', 'existingAnswer'));
     }
 
+    $absensi = \App\Models\Absensi::where('materi_id', $materi->id)
+        ->where('siswa_id', auth()->id())
+        ->first();
+
+    return view('siswa.materi.show', compact('materi', 'soals', 'jawabanKuis', 'absensi'));
+}
     public function submitKuis(Request $request, $id)
     {
         $materi = Materi::with('soals')->findOrFail($id);

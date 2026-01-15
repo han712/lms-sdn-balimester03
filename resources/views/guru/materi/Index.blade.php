@@ -19,13 +19,13 @@
         <div class="card-header py-3 border-bottom-0">
             <ul class="nav nav-tabs card-header-tabs" id="materiTabs" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link {{ request('tipe') == 'materi' || !request('tipe') ? 'active font-weight-bold text-primary' : 'text-secondary' }}" 
+                    <a class="nav-link {{ request('tipe') == 'materi' || !request('tipe') ? 'active font-weight-bold text-primary' : 'text-secondary' }}"
                        href="{{ route('guru.materi.index', ['tipe' => 'materi']) }}">
                         <i class="fas fa-book-open me-2"></i> Materi Pembelajaran
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request('tipe') == 'kuis' ? 'active font-weight-bold text-primary' : 'text-secondary' }}" 
+                    <a class="nav-link {{ request('tipe') == 'kuis' ? 'active font-weight-bold text-primary' : 'text-secondary' }}"
                        href="{{ route('guru.materi.index', ['tipe' => 'kuis']) }}">
                         <i class="fas fa-pen-square me-2"></i> Kelola Kuis
                     </a>
@@ -79,15 +79,28 @@
                                 <div class="fw-bold">{{ $item->judul }}</div>
                                 <small class="text-muted">{{ Str::limit(strip_tags($item->keterangan), 50) }}</small>
                             </td>
-                            <td><span class="badge bg-secondary">Kelas {{ $item->kelas }}</span></td>
+
+                            {{-- ✅ BADGE KELAS (lebih kebaca) --}}
+                            <td>
+                                <span class="badge badge-kelas">
+                                    <i class="fas fa-users me-1"></i> Kelas {{ $item->kelas }}
+                                </span>
+                            </td>
+
                             <td>
                                 @if($item->is_published)
-                                    <span class="badge bg-success">Published</span>
+                                    <span class="badge badge-status badge-published">
+                                        <i class="fas fa-check-circle me-1"></i> Published
+                                    </span>
                                 @else
-                                    <span class="badge bg-warning text-dark">Draft</span>
+                                    <span class="badge badge-status badge-draft">
+                                        <i class="fas fa-pencil-alt me-1"></i> Draft
+                                    </span>
                                 @endif
                             </td>
+
                             <td>{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }}</td>
+
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     @if($item->tipe == 'kuis')
@@ -127,11 +140,27 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <div class="mt-3">
                 {{ $materi->links() }}
             </div>
         </div>
     </div>
 </div>
+
+{{-- ✅ CSS badge kelas biar kontras dan kebaca --}}
+<style>
+    .badge-kelas {
+        background-color: #e0f2fe; /* biru muda */
+        color: #075985;           /* biru tua */
+        font-weight: 700;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid rgba(7, 89, 133, .15);
+    }
+</style>
 @endsection
