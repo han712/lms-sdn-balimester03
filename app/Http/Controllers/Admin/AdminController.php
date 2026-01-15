@@ -471,58 +471,58 @@ class AdminController extends Controller
         return response()->stream($callback, 200, $headers);
     }
     
-    public function importUsers(Request $request)
-    {
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
-            'role' => ['required', Rule::in(['guru', 'siswa'])],
-        ]);
+    // public function importUsers(Request $request)
+    // {
+    //     $request->validate([
+    //         'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+    //         'role' => ['required', Rule::in(['guru', 'siswa'])],
+    //     ]);
 
-        DB::beginTransaction();
+    //     DB::beginTransaction();
         
-        try {
-            $file = $request->file('file');
-            $csvData = array_map('str_getcsv', file($file->getRealPath()));
-            $header = array_shift($csvData);
+    //     try {
+    //         $file = $request->file('file');
+    //         $csvData = array_map('str_getcsv', file($file->getRealPath()));
+    //         $header = array_shift($csvData);
             
-            $imported = 0;
-            $errors = [];
+    //         $imported = 0;
+    //         $errors = [];
 
-            foreach ($csvData as $index => $row) {
-                try {
-                    $data = array_combine($header, $row);
+    //         foreach ($csvData as $index => $row) {
+    //             try {
+    //                 $data = array_combine($header, $row);
                     
-                    User::create([
-                        'name' => $data['name'] ?? $data['nama'],
-                        'email' => $data['email'],
-                        'password' => Hash::make($data['password'] ?? 'password'),
-                        'role' => $request->role,
-                        'nisn' => $data['nisn'] ?? null,
-                        'nip' => $data['nip'] ?? null,
-                        'kelas' => $data['kelas'] ?? null,
-                        'is_active' => true,
-                    ]);
+    //                 User::create([
+    //                     'name' => $data['name'] ?? $data['nama'],
+    //                     'email' => $data['email'],
+    //                     'password' => Hash::make($data['password'] ?? 'password'),
+    //                     'role' => $request->role,
+    //                     'nisn' => $data['nisn'] ?? null,
+    //                     'nip' => $data['nip'] ?? null,
+    //                     'kelas' => $data['kelas'] ?? null,
+    //                     'is_active' => true,
+    //                 ]);
                     
-                    $imported++;
-                } catch (\Exception $e) {
-                    $errors[] = "Baris " . ($index + 2) . ": " . $e->getMessage();
-                }
-            }
+    //                 $imported++;
+    //             } catch (\Exception $e) {
+    //                 $errors[] = "Baris " . ($index + 2) . ": " . $e->getMessage();
+    //             }
+    //         }
 
-            DB::commit();
+    //         DB::commit();
 
-            $message = "{$imported} user berhasil diimport";
-            if (count($errors) > 0) {
-                $message .= ". " . count($errors) . " error: " . implode(', ', array_slice($errors, 0, 3));
-            }
+    //         $message = "{$imported} user berhasil diimport";
+    //         if (count($errors) > 0) {
+    //             $message .= ". " . count($errors) . " error: " . implode(', ', array_slice($errors, 0, 3));
+    //         }
 
-            return back()->with('success', $message);
+    //         return back()->with('success', $message);
             
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal mengimport user: ' . $e->getMessage());
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return back()->with('error', 'Gagal mengimport user: ' . $e->getMessage());
+    //     }
+    // }
     public function deleteMateri(Materi $materi)
     {
         DB::beginTransaction();
