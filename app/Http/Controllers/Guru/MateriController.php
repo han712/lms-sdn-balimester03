@@ -3,58 +3,54 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\Materi;
+use App\Models\Absensi;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Materi;
-use App\Models\Absensi;
-use App\Models\User;
+use Illuminate\Validation\Rule;
 
 class MateriController extends Controller
 {
-    /**
-     * Menampilkan daftar materi.
-     */
-    public function index()
+    public function index(Request $request)
     {
         $query = Materi::where('guru_id', Auth::id());
 
-        // Search & Filters
-        if (request('search')) {
-            $search = request('search');
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('judul', 'like', "%{$search}%")
-                  ->orWhere('keterangan', 'like', "%{$search}%"); // FIX: deskripsi -> keterangan
+                  ->orWhere('keterangan', 'like', "%{$search}%");
             });
         }
-        
-        if (request('kelas')) $query->where('kelas', request('kelas'));
-        
-        // Filter Tipe & Status
-        if (request('tipe')) $query->where('tipe', request('tipe'));
-        
-        if (request('status')) {
-            $isPublished = request('status') === 'published';
+
+        // Filter kelas
+        if ($request->filled('kelas')) {
+            $query->where('kelas', $request->kelas);
+        }
+
+        // Filter tipe
+        if ($request->filled('tipe')) {
+            $query->where('tipe', $request->tipe);
+        }
+
+        // Filter status publish
+        if ($request->filled('status')) {
+            $isPublished = $request->status === 'published';
             $query->where('is_published', $isPublished);
         }
 
-        $materi = $query->withCount([
-                'absensi',
-                'absensi as absensi_hadir_count' => fn($q) => $q->where('status', 'hadir'),
-                'jawabanKuis'
-            ])
-            ->latest()
-            ->paginate(15)
-            ->appends(request()->query());
+        $materi = $query->latest()->paginate(15)->appends($request->query());
 
-        // Statistik untuk Header
         $filterStats = [
-            'total' => Materi::where('guru_id', Auth::id())->count(),
+            'total'     => Materi::where('guru_id', Auth::id())->count(),
             'published' => Materi::where('guru_id', Auth::id())->where('is_published', true)->count(),
-            'draft' => Materi::where('guru_id', Auth::id())->where('is_published', false)->count(),
-            'materi' => Materi::where('guru_id', Auth::id())->where('tipe', 'materi')->count(),
-            'kuis' => Materi::where('guru_id', Auth::id())->where('tipe', 'kuis')->count(),
+            'draft'     => Materi::where('guru_id', Auth::id())->where('is_published', false)->count(),
+            'materi'    => Materi::where('guru_id', Auth::id())->where('tipe', 'materi')->count(),
+            'kuis'      => Materi::where('guru_id', Auth::id())->where('tipe', 'kuis')->count(),
         ];
 
         return view('guru.materi.index', compact('materi', 'filterStats'));
@@ -62,28 +58,29 @@ class MateriController extends Controller
 
     public function create()
     {
-        $kelasList = range(1, 6);
+        // pakai config biar konsisten dengan view
+        $kelasList = config('lms.daftar_kelas', range(1, 6));
         return view('guru.materi.create', compact('kelasList'));
     }
 
-    /**
-     * Logic MENYIMPAN Materi Baru.
-     */
     public function store(Request $request)
     {
-        // FIX: Validasi disesuaikan dengan kolom database
-       $validated = $request->validate([
+        $kelasValid = config('lms.daftar_kelas', range(1, 6));
+
+        $validated = $request->validate([
             'judul'           => 'required|string|max:255',
             'keterangan'      => 'required|string',
             'tipe'            => 'required|in:materi,kuis',
-            'kelas'           => 'required|in:1,2,3,4,5,6',
-            'file'            => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,png,mp4,avi|max:51200',
+            'kelas'           => ['required', Rule::in($kelasValid)],
+
+            'file'            => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4,avi|max:51200',
             'link'            => 'nullable|url|max:500',
             'video'           => 'nullable|url|max:500',
-            // Gunakan aturan validasi tanggal yang benar
-            'tanggal_mulai'   => 'nullable|date', 
+
+            'tanggal_mulai'   => 'nullable|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
-            'is_published'    => 'nullable|boolean', // Cukup validasi tipe data
+
+            'is_published'    => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
@@ -96,255 +93,286 @@ class MateriController extends Controller
                 $path = $file->storeAs('materi/pembelajaran', $filename, 'public');
             }
 
-            // 2. LOGIC DEFAULT VALUE: Ditaruh di sini, saat create data
             $materi = Materi::create([
                 'guru_id'         => Auth::id(),
                 'judul'           => $validated['judul'],
                 'keterangan'      => $validated['keterangan'],
-                'tipe'            => 'materi',
+                'tipe'            => $validated['tipe'], // dari form
                 'kelas'           => $validated['kelas'],
-                'file'            => $path,
-                'link'            => $request->link,
-                'video'           => $request->video,
-                // Default tanggal dihandle di sini
-                'tanggal_mulai'   => $request->tanggal_mulai ?? now(), 
-                'tanggal_selesai' => $request->tanggal_selesai,
-                'is_published'    => $request->boolean('is_published'), // Konversi boolean di sini
+                'file'            => $path,              // kalau kolommu file_path, ganti di sini
+                'link'            => $validated['link'] ?? null,
+                'video'           => $validated['video'] ?? null,
+                'tanggal_mulai'   => $validated['tanggal_mulai'] ?? now(),
+                'tanggal_selesai' => $validated['tanggal_selesai'] ?? null,
+                'is_published'    => $request->boolean('is_published'),
             ]);
 
-            // Auto-create absensi jika langsung dipublish
-            if ($materi->is_published) {
+            // Auto create absensi jika dipublish & tipe materi
+            if ($materi->is_published && $materi->tipe === 'materi') {
                 $this->createAbsensiForMateri($materi);
             }
 
             DB::commit();
-            return redirect()->route('guru.materi.index')->with('success', 'Materi berhasil dibuat!');
 
+            return redirect()
+                ->route('guru.materi.index')
+                ->with('success', 'Materi berhasil dibuat!');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // hapus file jika sudah terlanjur upload
             if ($path && Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
             }
-            return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage())->withInput();
+
+            return back()
+                ->with('error', 'Gagal menyimpan: ' . $e->getMessage())
+                ->withInput();
         }
     }
 
-    public function show($id)
+    public function show(Materi $materi)
     {
-        // 1. Ambil materi & relasi
-        $materi = Materi::with('guru')->findOrFail($id);
+      $this->authorizeMateri($materi);
 
-        // 2. Cek hak akses
-        if ($materi->guru_id !== auth()->id()) {
-            abort(403, 'Akses ditolak.');
-        }
+    // load relasi kalau view butuh
+    $materi->load([
+        'guru',
+        'absensi.siswa',
+        'jawabanKuis.siswa',
+    ]);
 
-        // 3. Default statistik (Null jika bukan kuis)
-        $kuisStats = null;
+    // Statistik absensi
+    $absensiStats = $materi->absensi()
+        ->selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as hadir,
+            SUM(CASE WHEN status = 'izin' THEN 1 ELSE 0 END) as izin,
+            SUM(CASE WHEN status = 'sakit' THEN 1 ELSE 0 END) as sakit,
+            SUM(CASE WHEN status = 'tidak_hadir' THEN 1 ELSE 0 END) as tidak_hadir
+        ")
+        ->first();
 
-        // 4. Hitung Statistik HANYA jika tipe KUIS
-        if ($materi->tipe === 'kuis') {
-            $materi->load('jawabanKuis'); // Pastikan relasi di Model Materi sudah ada!
-
-            $total = $materi->jawabanKuis->count();
-            $dinilai = $materi->jawabanKuis->whereNotNull('nilai')->count();
-            
-            // Pakai null coalescing operator biar gak error kalau kosong
-            $rata = $total > 0 ? round($materi->jawabanKuis->avg('nilai'), 1) : 0;
-            $max = $total > 0 ? $materi->jawabanKuis->max('nilai') : 0;
-            $min = $total > 0 ? $materi->jawabanKuis->min('nilai') : 0;
-
-            // --- INI PERBAIKANNYA (Key disamakan dengan View) ---
-            $kuisStats = [
-                'total_jawaban'   => $total,
-                'sudah_dinilai'   => $dinilai,
-                'belum_dinilai'   => $total - $dinilai,
-                'rata_rata'       => $rata,
-                'nilai_tertinggi' => $max, // Tadi namanya 'tertinggi', sekarang 'nilai_tertinggi'
-                'nilai_terendah'  => $min, // Tadi namanya 'terendah', sekarang 'nilai_terendah'
-            ];
-        }
-
-        return view('guru.materi.show', compact('materi', 'kuisStats'));
+    $persentaseKehadiran = 0;
+    if (($absensiStats->total ?? 0) > 0) {
+        $persentaseKehadiran = round((($absensiStats->hadir ?? 0) / $absensiStats->total) * 100, 2);
     }
+
+    // Statistik kuis (kalau tipe = kuis)
+    $kuisStats = null;
+    if ($materi->tipe === 'kuis') {
+        $jawaban = $materi->jawabanKuis;
+        $dinilai = $jawaban->whereNotNull('nilai');
+
+        $kuisStats = [
+            'total_jawaban'   => $jawaban->count(),
+            'sudah_dinilai'   => $dinilai->count(),
+            'belum_dinilai'   => $jawaban->whereNull('nilai')->count(),
+            'rata_rata'       => round($dinilai->avg('nilai') ?? 0, 2),
+            'nilai_tertinggi' => $dinilai->max('nilai') ?? 0,
+            'nilai_terendah'  => $dinilai->min('nilai') ?? 0,
+        ];
+    }
+
+    return view('guru.materi.show', compact(
+        'materi',
+        'absensiStats',
+        'persentaseKehadiran',
+        'kuisStats'
+    ));
+}
 
     public function edit(Materi $materi)
     {
         $this->authorizeMateri($materi);
-        $kelasList = range(1, 6);
+
+        $kelasList = config('lms.daftar_kelas', range(1, 6));
         return view('guru.materi.edit', compact('materi', 'kelasList'));
     }
 
-    /**
-     * Logic UPDATE Materi.
-     */
     public function update(Request $request, Materi $materi)
     {
         $this->authorizeMateri($materi);
 
+        $kelasValid = config('lms.daftar_kelas', range(1, 6));
+
         $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'keterangan' => 'required|string',
-            'kelas' => 'required|in:1,2,3,4,5,6',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,png,mp4,avi|max:51200',
-            'link' => 'nullable|url|max:500',
-            'video' => 'nullable|url|max:500',
-            'is_published' => 'boolean',
-            'tanggal_mulai' => 'nullable|date',
+            'judul'           => 'required|string|max:255',
+            'keterangan'      => 'required|string',
+            'tipe'            => 'required|in:materi,kuis',
+            'kelas'           => ['required', Rule::in($kelasValid)],
+
+            'file'            => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,jpg,jpeg,png,mp4,avi|max:51200',
+            'link'            => 'nullable|url|max:500',
+            'video'           => 'nullable|url|max:500',
+
+            'tanggal_mulai'   => 'nullable|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+
+            'is_published'    => 'nullable|boolean',
+            'remove_file'     => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
         try {
             $data = [
-                'judul' => $validated['judul'],
-                'keterangan' => $validated['keterangan'],
-                'kelas' => $validated['kelas'],
-                'link' => $request->link,
-                'video' => $request->video,
-                'is_published' => $request->boolean('is_published'),
-                'tanggal_mulai' => $request->tanggal_mulai ?? $materi->tanggal_mulai,
-                'tanggal_selesai' => $request->tanggal_selesai,
+                'judul'           => $validated['judul'],
+                'keterangan'      => $validated['keterangan'],
+                'tipe'            => $validated['tipe'],
+                'kelas'           => $validated['kelas'],
+                'link'            => $validated['link'] ?? null,
+                'video'           => $validated['video'] ?? null,
+                'tanggal_mulai'   => $validated['tanggal_mulai'] ?? $materi->tanggal_mulai,
+                'tanggal_selesai' => $validated['tanggal_selesai'] ?? null,
+                'is_published'    => $request->boolean('is_published'),
             ];
 
-            // Handle File Upload Baru
+            $kelasChanged = $materi->kelas != $validated['kelas'];
+
+            // remove file
+            if ($request->boolean('remove_file') && $materi->file) {
+                if (Storage::disk('public')->exists($materi->file)) {
+                    Storage::disk('public')->delete($materi->file);
+                }
+                $data['file'] = null;
+            }
+
+            // upload file baru
             if ($request->hasFile('file')) {
-                // Hapus file lama
                 if ($materi->file && Storage::disk('public')->exists($materi->file)) {
                     Storage::disk('public')->delete($materi->file);
                 }
-                
+
                 $file = $request->file('file');
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $data['file'] = $file->storeAs('materi/pembelajaran', $filename, 'public');
             }
 
-            // Cek jika kelas berubah (untuk reset absensi)
-            $kelasChanged = $materi->kelas != $validated['kelas'];
-            
             $materi->update($data);
 
-            // Jika kelas berubah dan materi published, reset absensi
-            if ($kelasChanged && $materi->is_published) {
-                $materi->absensi()->delete(); // Hapus absensi kelas lama
-                $this->createAbsensiForMateri($materi); // Buat baru
+            // reset absensi kalau kelas berubah dan materi published
+            if ($kelasChanged && $materi->is_published && $materi->tipe === 'materi') {
+                $materi->absensi()->delete();
+                $this->createAbsensiForMateri($materi);
             }
 
             DB::commit();
-            return redirect()->route('guru.materi.index')->with('success', 'Materi berhasil diperbarui.');
 
+            return redirect()
+                ->route('guru.materi.index')
+                ->with('success', 'Materi berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal update: ' . $e->getMessage());
+            return back()->with('error', 'Gagal update: ' . $e->getMessage())->withInput();
         }
     }
 
     public function destroy(Materi $materi)
     {
         $this->authorizeMateri($materi);
-        
-        if ($materi->file && Storage::disk('public')->exists($materi->file)) {
-            Storage::disk('public')->delete($materi->file);
-        }
-        
-        $materi->delete(); // Soft delete jika trait enabled, atau force delete
-        return redirect()->route('guru.materi.index')->with('success', 'Materi dihapus.');
-    }
 
-    // --- Actions Lainnya ---
+        DB::beginTransaction();
+        try {
+            if ($materi->file && Storage::disk('public')->exists($materi->file)) {
+                Storage::disk('public')->delete($materi->file);
+            }
+
+            $materi->absensi()->delete();
+            $materi->delete();
+
+            DB::commit();
+
+            return redirect()->route('guru.materi.index')->with('success', 'Materi dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal hapus: ' . $e->getMessage());
+        }
+    }
 
     public function togglePublish(Materi $materi)
     {
         $this->authorizeMateri($materi);
-        $newStatus = !$materi->is_published;
-        
-        $materi->update(['is_published' => $newStatus]);
 
-        if ($newStatus && $materi->tipe === 'materi' && $materi->absensi()->count() === 0) {
-            $this->createAbsensiForMateri($materi);
+        DB::beginTransaction();
+        try {
+            $newStatus = !$materi->is_published;
+            $materi->update(['is_published' => $newStatus]);
+
+            if ($newStatus && $materi->tipe === 'materi' && $materi->absensi()->count() === 0) {
+                $this->createAbsensiForMateri($materi);
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Status publish diubah.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal mengubah status: ' . $e->getMessage());
         }
-
-        return back()->with('success', 'Status publish diubah.');
     }
 
     public function duplicate(Materi $materi)
     {
         $this->authorizeMateri($materi);
-        
-        $newMateri = $materi->replicate();
-        $newMateri->judul = $materi->judul . ' (Copy)';
-        $newMateri->is_published = false;
-        
-        // Copy file fisik jika ada
-        if ($materi->file && Storage::disk('public')->exists($materi->file)) {
-            $ext = pathinfo($materi->file, PATHINFO_EXTENSION);
-            $newPath = 'materi/pembelajaran/' . time() . '_' . uniqid() . '.' . $ext;
-            Storage::disk('public')->copy($materi->file, $newPath);
-            $newMateri->file = $newPath;
+
+        DB::beginTransaction();
+        try {
+            $newMateri = $materi->replicate();
+            $newMateri->judul = $materi->judul . ' (Copy)';
+            $newMateri->is_published = false;
+
+            if ($materi->file && Storage::disk('public')->exists($materi->file)) {
+                $ext = pathinfo($materi->file, PATHINFO_EXTENSION);
+                $newPath = 'materi/pembelajaran/' . time() . '_' . uniqid() . '.' . $ext;
+                Storage::disk('public')->copy($materi->file, $newPath);
+                $newMateri->file = $newPath;
+            }
+
+            $newMateri->save();
+
+            DB::commit();
+
+            return redirect()->route('guru.materi.edit', $newMateri->id)
+                ->with('success', 'Materi berhasil diduplikasi sebagai draft.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal duplikat: ' . $e->getMessage());
         }
-
-        $newMateri->save();
-
-        return redirect()->route('guru.materi.index')->with('success', 'Materi diduplikasi sebagai draft.');
     }
 
-    public function bulkDelete(Request $request)
+    // =========================
+    // Helpers
+    // =========================
+    private function authorizeMateri(Materi $materi)
     {
-        $ids = $request->ids;
-        if (empty($ids)) return back()->with('error', 'Tidak ada materi dipilih.');
-
-        $materis = Materi::where('guru_id', Auth::id())->whereIn('id', $ids)->get();
-        foreach ($materis as $m) {
-            if ($m->file) Storage::disk('public')->delete($m->file);
-            $m->delete();
+        if ($materi->guru_id !== Auth::id()) {
+            abort(403, 'Akses ditolak.');
         }
-
-        return back()->with('success', count($materis) . ' materi dihapus.');
-    }
-
-    public function bulkPublish(Request $request)
-    {
-        $ids = $request->ids;
-        if (empty($ids)) return back()->with('error', 'Tidak ada materi dipilih.');
-        
-        $status = $request->action === 'publish';
-        
-        Materi::where('guru_id', Auth::id())
-            ->whereIn('id', $ids)
-            ->update(['is_published' => $status]);
-
-        // Opsional: create absensi untuk yang baru dipublish (bisa ditambahkan logic di sini)
-
-        return back()->with('success', 'Status materi diperbarui.');
-    }
-
-    // --- Helpers ---
-
-    private function authorizeMateri($materi)
-    {
-        if ($materi->guru_id !== Auth::id()) abort(403);
     }
 
     private function createAbsensiForMateri(Materi $materi)
     {
-        // Cari siswa di kelas tersebut
-        $siswaList = User::where('role', 'siswa')
+        $siswaIds = User::where('role', 'siswa')
             ->where('kelas', $materi->kelas)
             ->where('is_active', true)
             ->pluck('id');
 
-        $data = [];
         $now = now();
-        foreach ($siswaList as $siswaId) {
-            $data[] = [
-                'materi_id' => $materi->id,
-                'siswa_id' => $siswaId,
-                'status' => 'tidak_hadir', 
-                'created_at' => $now,
-                'updated_at' => $now
+        $rows = [];
+
+        foreach ($siswaIds as $sid) {
+            $rows[] = [
+                'materi_id'   => $materi->id,
+                'siswa_id'    => $sid,
+                'status'      => 'tidak_hadir', // konsisten dengan code lain
+                'waktu_akses' => $now,
+                'created_at'  => $now,
+                'updated_at'  => $now,
             ];
         }
-        
-        if (!empty($data)) Absensi::insert($data);
+
+        if (!empty($rows)) {
+            Absensi::insert($rows);
+        }
     }
 }

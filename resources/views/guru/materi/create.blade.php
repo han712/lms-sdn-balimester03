@@ -54,6 +54,9 @@
                                     </option>
                                     @endforeach
                                     </select>
+                                    @error('kelas')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">

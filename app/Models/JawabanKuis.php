@@ -9,36 +9,45 @@ class JawabanKuis extends Model
 {
     use HasFactory;
 
-    // [PENTING] Mengunci nama tabel agar tidak dicari sebagai 'jawaban_kuis_s'
     protected $table = 'jawaban_kuis';
 
     protected $fillable = [
         'siswa_id',
         'materi_id',
-        'jawaban_file', // atau 'isi_jawaban' sesuaikan database kamu
+
+        // skenario upload file
+        'jawaban_file',
+        'file_path', // kalau ada data lama
+
+        // skenario interaktif (PG+Essay)
+        'jawaban',       // <-- PENTING
+
+        // penilaian
         'nilai',
-        'komentar_guru',
-        'dinilai_oleh', // ID guru yang menilai
-        'tanggal_dinilai'
+        'catatan_guru',
+        'catatan_siswa',
+        'dinilai_oleh',
+        'dinilai_pada',
     ];
 
     protected $casts = [
+        'jawaban' => 'array',       // <-- PENTING (biar $jawaban->jawaban jadi array)
         'nilai' => 'integer',
-        'tanggal_dinilai' => 'datetime',
+        'dinilai_pada' => 'datetime',
     ];
 
-    // --- Scopes ---
-    
-    // Scope yang dipanggil di AdminController: ->sudahDinilai()
-    public function scopeSudahDinilai($query)
+    public function siswa()
     {
-        return $query->whereNotNull('nilai');
+        return $this->belongsTo(User::class, 'siswa_id');
     }
 
-    // --- Relationships ---
-    public function siswa() { return $this->belongsTo(User::class, 'siswa_id'); }
-    public function materi() { return $this->belongsTo(Materi::class, 'materi_id'); }
-    
-    // Relasi ke Guru yang menilai
-    public function penilai() { return $this->belongsTo(User::class, 'dinilai_oleh'); }
+    public function materi()
+    {
+        return $this->belongsTo(Materi::class, 'materi_id');
+    }
+
+    public function penilai()
+    {
+        return $this->belongsTo(User::class, 'dinilai_oleh');
+    }
 }

@@ -39,13 +39,13 @@ class DashboardController extends Controller
             ->selectRaw("
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as hadir,
-                SUM(CASE WHEN status = 'alpha' THEN 1 ELSE 0 END) as alpha
+                SUM(CASE WHEN status = 'tidak_hadir' THEN 1 ELSE 0 END) as tidak_hadir
             ")
             ->first();
 
         $stats['total_absensi'] = $absensiStats->total ?? 0;
         $stats['absensi_hadir'] = $absensiStats->hadir ?? 0;
-        $stats['absensi_alpha'] = $absensiStats->alpha ?? 0;
+        $stats['absensi_tidak_hadir'] = $absensiStats->tidak_hadir ?? 0;
 
         // 3. Statistik Kuis
         $kuisStats = JawabanKuis::whereHas('materi', fn($q) => $q->where('guru_id', $guruId))
@@ -131,15 +131,15 @@ class DashboardController extends Controller
 
         // --- TAMBAHAN YANG HILANG (FIX ERROR) ---
         
-        // 6. Siswa Perlu Perhatian (Banyak Alpha)
+        // 6. Siswa Perlu Perhatian (Banyak tidak_hadir)
         $siswaPerluPerhatian = Absensi::with('siswa')
             ->whereHas('materi', fn($q) => $q->where('guru_id', $guruId))
-            ->where('status', 'alpha')
+            ->where('status', 'tidak_hadir')
             ->whereMonth('waktu_akses', $currentMonth)
-            ->select('siswa_id', DB::raw('count(*) as total_alpha'))
+            ->select('siswa_id', DB::raw('count(*) as total_tidak_hadir'))
             ->groupBy('siswa_id')
-            ->having('total_alpha', '>=', 2) // Minimal 2x alpha
-            ->orderByDesc('total_alpha')
+            ->having('total_tidak_hadir', '>=', 2) // Minimal 2x tidak_hadir
+            ->orderByDesc('total_tidak_hadir')
             ->take(5)
             ->get();
 

@@ -14,11 +14,11 @@ class ValidStatus implements ValidationRule
      */
     public function passes($attribute, $value)
     {
-        return in_array($value, ['hadir', 'izin', 'sakit', 'alpha']);
+        return in_array($value, ['hadir', 'izin', 'sakit', 'tidak_hadir']);
     }
 
     public function message()
     {
-        return 'Status harus: hadir, izin, sakit, atau alpha.';
+        return 'Status harus: hadir, izin, sakit, atau tidak_hadir.';
     }
 }

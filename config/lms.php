@@ -18,9 +18,9 @@ return [
             'hadir' => 'Hadir',
             'izin' => 'Izin',
             'sakit' => 'Sakit',
-            'alpha' => 'Alpha',
+            'tidak_hadir' => 'tidak_hadir',
         ],
-        'default_status' => 'alpha',
+        'default_status' => 'tidak_hadir',
     ],
 
     // Nilai Settings
@@ -74,6 +74,6 @@ return [
     // Notifications
     'notifications' => [
         'kuis_deadline_days' => 3, // Notify 3 days before deadline
-        'alpha_threshold' => 3, // Notify if student alpha >= 3 times
+        'tidak_hadir_threshold' => 3, // Notify if student tidak_hadir >= 3 times
     ],
 ];

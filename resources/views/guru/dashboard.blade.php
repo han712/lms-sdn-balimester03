@@ -342,7 +342,7 @@
                         </div>
                         <div>
                             <span class="badge badge-danger badge-pill">
-                                {{ $item->total_alpha }}x Alpha
+                                {{ $item->total_tidak_hadir }}x tidak_hadir
                             </span>
                         </div>
                     </div>
@@ -512,14 +512,14 @@ const ctxAbsensi = document.getElementById('chartAbsensiStatus').getContext('2d'
 new Chart(ctxAbsensi, {
     type: 'bar',
     data: {
-        labels: ['Hadir', 'Izin', 'Sakit', 'Alpha'],
+        labels: ['Hadir', 'Izin', 'Sakit', 'tidak_hadir'],
         datasets: [{
             label: 'Jumlah',
             data: [
                 {{ $absensiPerStatus['hadir'] ?? 0 }},
                 {{ $absensiPerStatus['izin'] ?? 0 }},
                 {{ $absensiPerStatus['sakit'] ?? 0 }},
-                {{ $absensiPerStatus['alpha'] ?? 0 }}
+                {{ $absensiPerStatus['tidak_hadir'] ?? 0 }}
             ],
             backgroundColor: [
                 '#1cc88a',
