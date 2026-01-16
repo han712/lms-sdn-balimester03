@@ -18,7 +18,9 @@
                 <div class="p-4 p-md-5 text-white {{ $materi->tipe == 'kuis' ? 'bg-gradient-warning' : 'bg-gradient-primary' }}">
                     <div class="d-flex align-items-center mb-3">
                         <span class="badge bg-white text-dark me-2">{{ strtoupper($materi->tipe) }}</span>
-                        <span class="text-white-50 small"><i class="bi bi-clock"></i> Diposting {{ $materi->created_at->diffForHumans() }}</span>
+                        <span class="text-white-50 small">
+                            <i class="bi bi-clock"></i> Diposting {{ $materi->created_at->diffForHumans() }}
+                        </span>
                     </div>
                     <h1 class="display-6 fw-bold mb-2">{{ $materi->judul }}</h1>
                     <div class="d-flex align-items-center">
@@ -37,18 +39,121 @@
                         </div>
                     </div>
 
-                    <div class="mb-5 lh-lg text-dark">
-                        {!! nl2br(e($materi->deskripsi ?? $materi->keterangan)) !!}
-                    </div>
-
                     @php
-                        // FIX: pakai kolom file (fallback kalau ada data lama pakai file_path)
+                        // konten teks utama
+                        $content = $materi->keterangan ?? $materi->deskripsi ?? '';
+
+                        // kumpulkan sumber url:
+                        // 1) dari kolom DB (video & link)
+                        // 2) dari konten teks (kalau user tempel url di keterangan)
+                        $urls = [];
+
+                        if (!empty($materi->video)) $urls[] = trim($materi->video);
+                        if (!empty($materi->link))  $urls[] = trim($materi->link);
+
+                        preg_match_all('/https?:\/\/[^\s<]+/i', $content, $matches);
+                        if (!empty($matches[0])) {
+                            foreach ($matches[0] as $u) $urls[] = $u;
+                        }
+
+                        // bersihkan duplikat
+                        $urls = array_values(array_unique(array_filter($urls)));
+
+                        // fungsi extract youtube id
+                        $youtubeId = null;
+
+                        foreach ($urls as $url) {
+                            $u = trim($url);
+                            $u = rtrim($u, ".)],");
+
+                            // youtu.be/VIDEOID
+                            if (preg_match('~youtu\.be/([a-zA-Z0-9_-]{11})~', $u, $m)) {
+                                $youtubeId = $m[1];
+                                break;
+                            }
+
+                            // youtube.com/watch?v=VIDEOID
+                            if (preg_match('~youtube\.com/watch\?~', $u)) {
+                                $query = parse_url($u, PHP_URL_QUERY);
+                                parse_str($query ?? '', $q);
+                                if (!empty($q['v']) && preg_match('/^[a-zA-Z0-9_-]{11}$/', $q['v'])) {
+                                    $youtubeId = $q['v'];
+                                    break;
+                                }
+                            }
+
+                            // youtube.com/shorts/VIDEOID
+                            if (preg_match('~youtube\.com/shorts/([a-zA-Z0-9_-]{11})~', $u, $m)) {
+                                $youtubeId = $m[1];
+                                break;
+                            }
+
+                            // youtube.com/embed/VIDEOID
+                            if (preg_match('~youtube\.com/embed/([a-zA-Z0-9_-]{11})~', $u, $m)) {
+                                $youtubeId = $m[1];
+                                break;
+                            }
+                        }
+
+                        // file lampiran
                         $filePath = $materi->file ?? $materi->file_path ?? null;
                     @endphp
 
+                    {{-- Konten teks --}}
+                    @if(trim($content) !== '')
+                        <div class="mb-4 lh-lg text-dark">
+                            {!! nl2br(e($content)) !!}
+                        </div>
+                    @endif
+
+                    {{-- Embed YouTube dari DB --}}
+                    @if($youtubeId)
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-2">Video</h6>
+                            <div class="ratio ratio-16x9 rounded-3 overflow-hidden shadow-sm">
+                                <iframe
+                                    src="https://www.youtube.com/embed/{{ $youtubeId }}"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen
+                                ></iframe>
+                            </div>
+
+                            {{-- Link asli (opsional, biar bisa dibuka di app youtube) --}}
+                            @if(!empty($materi->video))
+                                <div class="mt-2">
+                                    <a href="{{ $materi->video }}" target="_blank" class="small text-decoration-none">
+                                        <i class="bi bi-box-arrow-up-right"></i> Buka di YouTube
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    @elseif(!empty($materi->video))
+                        {{-- Kalau kolom video ada tapi formatnya bukan youtube --}}
+                        <div class="alert alert-warning border-0 rounded-xl">
+                            Link video tersimpan, tapi formatnya tidak terbaca sebagai link YouTube.
+                            <div class="mt-2">
+                                <a href="{{ $materi->video }}" target="_blank">
+                                    {{ $materi->video }}
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Link tambahan (jika ada) --}}
+                    @if(!empty($materi->link))
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-2">Link Tambahan</h6>
+                            <a href="{{ $materi->link }}" target="_blank" class="btn btn-outline-primary rounded-pill">
+                                <i class="bi bi-link-45deg"></i> Buka Link
+                            </a>
+                        </div>
+                    @endif
+
+                    {{-- Lampiran file --}}
                     @if($filePath)
                         <div class="card bg-light border-0 rounded-xl p-3 mb-4">
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-file-earmark-text-fill text-primary fs-2 me-3"></i>
                                     <div>
@@ -62,9 +167,13 @@
                             </div>
                         </div>
                     @endif
+
                 </div>
             </div>
 
+            {{-- =======================
+                 BAGIAN KUIS
+            ======================== --}}
             @if($materi->tipe == 'kuis')
 
                 @if(isset($jawabanKuis) && $jawabanKuis)
@@ -82,6 +191,7 @@
                                     <div class="display-3 fw-bold {{ $jawabanKuis->nilai >= 70 ? 'text-success' : 'text-danger' }}">
                                         {{ $jawabanKuis->nilai }}
                                     </div>
+
                                     @if($jawabanKuis->catatan_guru)
                                         <div class="alert alert-info mt-2 mb-0 py-2 small">
                                             <strong>Catatan Guru:</strong> {{ $jawabanKuis->catatan_guru }}
@@ -104,7 +214,6 @@
                         </div>
 
                         <div class="card-body p-4">
-
                             @if(!isset($soals) || $soals->count() == 0)
                                 <div class="alert alert-warning border-0 rounded-xl mb-0">
                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -142,7 +251,7 @@
                                                             <input
                                                                 class="form-check-input"
                                                                 type="radio"
-                                                                name="jawaban[{{ $s->id }}]"name="jawaban[{{ $s->id }}]"
+                                                                name="jawaban[{{ $s->id }}]"
                                                                 value="{{ $key }}"
                                                                 id="soal{{ $s->id }}_{{ $key }}"
                                                                 required
@@ -162,7 +271,7 @@
                                                         class="form-control"
                                                         rows="3"
                                                         placeholder="Tulis jawaban kamu di sini..."
-                                                    required
+                                                        required
                                                     ></textarea>
                                                     <small class="text-muted">Tipe soal: essay</small>
                                                 </div>
@@ -181,10 +290,10 @@
                                     </div>
                                 </form>
                             @endif
-
                         </div>
                     </div>
                 @endif
+
             @endif
 
         </div>

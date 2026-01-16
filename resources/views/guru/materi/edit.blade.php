@@ -19,16 +19,17 @@
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Edit Informasi Materi</h6>
                 </div>
+
                 <div class="card-body">
                     <form action="{{ route('guru.materi.update', $materi->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
-                        
-                        <!-- Similar form fields as create.blade.php but with values -->
+
                         <div class="form-group">
                             <label for="judul">Judul Materi <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('judul') is-invalid @enderror" 
-                                   id="judul" name="judul" 
+                            <input type="text"
+                                   class="form-control @error('judul') is-invalid @enderror"
+                                   id="judul" name="judul"
                                    value="{{ old('judul', $materi->judul) }}" required>
                             @error('judul')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -36,10 +37,10 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="deskripsi">Deskripsi <span class="text-danger">*</span></label>
-                            <textarea class="form-control @error('deskripsi') is-invalid @enderror" 
-                                      id="deskripsi" name="deskripsi" rows="5" required>{{ old('deskripsi', $materi->deskripsi) }}</textarea>
-                            @error('deskripsi')
+                            <label for="keterangan">Isi Materi / Keterangan <span class="text-danger">*</span></label>
+                            <textarea class="form-control @error('keterangan') is-invalid @enderror"
+                                      id="keterangan" name="keterangan" rows="6" required>{{ old('keterangan', $materi->keterangan) }}</textarea>
+                            @error('keterangan')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -49,43 +50,49 @@
                                 <div class="form-group">
                                     <label for="tipe">Tipe <span class="text-danger">*</span></label>
                                     <select class="form-control" id="tipe" name="tipe" required>
-                                        <option value="materi" {{ $materi->tipe == 'materi' ? 'selected' : '' }}>Materi Pembelajaran</option>
-                                        <option value="kuis" {{ $materi->tipe == 'kuis' ? 'selected' : '' }}>Kuis/Tugas</option>
+                                        <option value="materi" {{ old('tipe', $materi->tipe) == 'materi' ? 'selected' : '' }}>Materi Pembelajaran</option>
+                                        <option value="kuis" {{ old('tipe', $materi->tipe) == 'kuis' ? 'selected' : '' }}>Kuis/Tugas</option>
                                     </select>
                                 </div>
                             </div>
+
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="kelas">Kelas <span class="text-danger">*</span></label>
-                                    <select class="form-control" id="kelas" name="kelas" required>
-                                    @foreach(config('lms.daftar_kelas') as $k)
-                                        <option value="{{ $k }}" {{ old('kelas') == $k ? 'selected' : '' }}>
-                                            Kelas {{ $k }}
-                                         </option>
-                                    @endforeach
+                                    <select class="form-control @error('kelas') is-invalid @enderror" id="kelas" name="kelas" required>
+                                        @foreach(config('lms.daftar_kelas') as $k)
+                                            <option value="{{ $k }}" {{ old('kelas', $materi->kelas) == $k ? 'selected' : '' }}>
+                                                Kelas {{ $k }}
+                                            </option>
+                                        @endforeach
                                     </select>
+                                    @error('kelas')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
 
-                        @if($materi->file_path)
-                        <div class="form-group">
-                            <label>File Saat Ini:</label>
-                            <div class="alert alert-info d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-file"></i> {{ basename($materi->file_path) }}
-                                </div>
-                                <div>
-                                    <a href="{{ asset('storage/' . $materi->file_path) }}" target="_blank" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-download"></i> Download
-                                    </a>
-                                    <div class="custom-control custom-checkbox d-inline-block ml-2">
-                                        <input type="checkbox" class="custom-control-input" id="remove_file" name="remove_file" value="1">
-                                        <label class="custom-control-label" for="remove_file">Hapus file</label>
+                        {{-- File existing --}}
+                        @if($materi->file)
+                            <div class="form-group">
+                                <label>File Saat Ini:</label>
+                                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-file"></i> {{ basename($materi->file) }}
+                                    </div>
+                                    <div>
+                                        <a href="{{ asset('storage/' . $materi->file) }}" target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+
+                                        <div class="custom-control custom-checkbox d-inline-block ml-2">
+                                            <input type="checkbox" class="custom-control-input" id="remove_file" name="remove_file" value="1">
+                                            <label class="custom-control-label" for="remove_file">Hapus file</label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
                         @endif
 
                         <div class="form-group">
@@ -94,15 +101,36 @@
                                 <input type="file" class="custom-file-input" id="file" name="file">
                                 <label class="custom-file-label" for="file">Pilih file baru...</label>
                             </div>
+                            @error('file')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label>Link Youtube (Opsional)</label>
+                            <input type="url" name="video" class="form-control"
+                                   placeholder="https://youtube.com/watch?v=.... atau https://youtu.be/...."
+                                   value="{{ old('video', $materi->video) }}">
+                            @error('video')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label>Link Tambahan (Opsional)</label>
+                            <input type="url" name="link" class="form-control"
+                                   placeholder="https://contoh.com"
+                                   value="{{ old('link', $materi->link) }}">
+                            @error('link')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
 
                         <div class="form-group">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="is_published" 
-                                       name="is_published" value="1" {{ $materi->is_published ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="is_published">
-                                    Publish materi
-                                </label>
+                                <input type="checkbox" class="custom-control-input" id="is_published"
+                                       name="is_published" value="1" {{ old('is_published', $materi->is_published) ? 'checked' : '' }}>
+                                <label class="custom-control-label" for="is_published">Publish materi</label>
                             </div>
                         </div>
 
@@ -114,6 +142,7 @@
                                 <i class="fas fa-times"></i> Batal
                             </a>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -125,10 +154,10 @@
                     <h6 class="m-0 font-weight-bold text-warning">Peringatan</h6>
                 </div>
                 <div class="card-body">
-                    <ul class="small">
-                        <li>Mengubah kelas akan mereset data absensi</li>
-                        <li>Upload file baru akan mengganti file lama</li>
-                        <li>Unpublish materi akan menyembunyikan dari siswa</li>
+                    <ul class="small mb-0">
+                        <li>Mengubah kelas akan mereset data absensi (jika logika kamu seperti itu).</li>
+                        <li>Upload file baru akan mengganti file lama.</li>
+                        <li>Unpublish materi akan menyembunyikan dari siswa.</li>
                     </ul>
                 </div>
             </div>
@@ -138,10 +167,13 @@
 
 @push('scripts')
 <script>
-document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-    const fileName = e.target.files[0]?.name || 'Pilih file baru...';
-    e.target.nextElementSibling.textContent = fileName;
-});
+    const input = document.querySelector('.custom-file-input');
+    if (input) {
+        input.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'Pilih file baru...';
+            e.target.nextElementSibling.textContent = fileName;
+        });
+    }
 </script>
 @endpush
 @endsection
