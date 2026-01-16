@@ -94,10 +94,10 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-uppercase">Kelas</label>
                                 <select class="form-select" name="kelas" required>
-                                    @foreach(\App\Models\Materi::getKelasOptions() as $kelas)
-                                        <option value="{{ $kelas }}" {{ old('kelas', $siswa->kelas) == $kelas ? 'selected' : '' }}>
-                                            Kelas {{ $kelas }}
-                                        </option>
+                                    @foreach(config('lms.daftar_kelas', ['1A','1B','2A','2B','3A','3B','4A','4B','5A','5B','6A','6B']) as $kelas)
+                                    <option value="{{ $kelas }}" {{ old('kelas', auth()->user()->kelas) == $kelas ? 'selected' : '' }}>
+                                        Kelas {{ $kelas }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>

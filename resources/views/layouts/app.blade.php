@@ -12,8 +12,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -25,16 +27,18 @@
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             padding: 1rem 0;
+            position: relative;
+            z-index: 1030; /* penting biar di atas konten */
         }
 
         /* Utilities Sudut Membulat */
         .rounded-xl { border-radius: 1rem !important; }
         .rounded-2xl { border-radius: 1.5rem !important; }
-        
+
         /* Efek Hover Kartu */
         .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-        
+
         /* Warna Gradasi Modern */
         .bg-gradient-primary { background: linear-gradient(45deg, #4e73df, #224abe); }
         .bg-gradient-warning { background: linear-gradient(45deg, #f6c23e, #dda20a); }
@@ -46,17 +50,44 @@
         .rotate-n-15 { transform: rotate(-15deg); }
         .z-index-1 { z-index: 1; }
         a { text-decoration: none; }
+
+        /* ✅ FIX dropdown kepotong */
+        .navbar-lms .dropdown-menu {
+            z-index: 2000;
+        }
+
+        /* Desktop/tablet: cukup normal, kasih max-height biar aman */
+        .dropdown-menu-mobile {
+            max-height: 70vh;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        /* Mobile: bikin dropdown jadi FIXED supaya tidak kepotong sidebar/collapse */
+        @media (max-width: 576px) {
+            .dropdown-menu-mobile {
+                position: fixed !important;
+                top: 70px !important;   /* sesuaikan tinggi navbar kamu */
+                right: 12px !important;
+                left: 12px !important;  /* biar full dan kebaca */
+                width: auto !important;
+                max-height: calc(100vh - 90px);
+                overflow-y: auto;
+                border-radius: 14px;
+            }
+        }
     </style>
 </head>
 <body>
-    
+
     <nav class="navbar navbar-expand-lg navbar-lms sticky-top mb-4">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="{{ route(auth()->user()->role . '.dashboard') }}">
-            <img src="{{ asset('img/logo-sekolah.png') }}" alt="Logo" height="40" class="me-2">
-            
-            {{ config('app.name') }}
+            <a class="navbar-brand fw-bold text-primary d-flex align-items-center"
+               href="{{ route(auth()->user()->role . '.dashboard') }}">
+                <img src="{{ asset('img/logo-sekolah.png') }}" alt="Logo" height="40" class="me-2">
+                {{ config('app.name') }}
             </a>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -64,27 +95,34 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto ms-3">
                     @if(auth()->check() && auth()->user()->role === 'siswa')
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold {{ request()->routeIs('siswa.dashboard') ? 'text-primary active' : 'text-secondary' }}" href="{{ route('siswa.dashboard') }}">
-                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold {{ request()->routeIs('siswa.materi.*') ? 'text-primary active' : 'text-secondary' }}" href="{{ route('siswa.materi.index') }}">
-                            <i class="bi bi-book me-1"></i> Materi & Kuis
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold {{ request()->routeIs('siswa.riwayat-absensi') ? 'text-primary active' : 'text-secondary' }}" href="{{ route('siswa.riwayat-absensi') }}">
-                            <i class="bi bi-clock-history me-1"></i> Absensi
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold {{ request()->routeIs('siswa.dashboard') ? 'text-primary active' : 'text-secondary' }}"
+                               href="{{ route('siswa.dashboard') }}">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold {{ request()->routeIs('siswa.materi.*') ? 'text-primary active' : 'text-secondary' }}"
+                               href="{{ route('siswa.materi.index') }}">
+                                <i class="bi bi-book me-1"></i> Materi & Kuis
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold {{ request()->routeIs('siswa.riwayat-absensi') ? 'text-primary active' : 'text-secondary' }}"
+                               href="{{ route('siswa.riwayat-absensi') }}">
+                                <i class="bi bi-clock-history me-1"></i> Absensi
+                            </a>
+                        </li>
                     @endif
                 </ul>
-                
+
                 <div class="d-flex align-items-center gap-3">
                     <div class="dropdown">
-                        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                        <a href="#"
+                           class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle"
+                           data-bs-toggle="dropdown"
+                           data-bs-display="static"
+                           aria-expanded="false">
                             <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-2">
                                 <i class="bi bi-person-fill"></i>
                             </div>
@@ -93,12 +131,12 @@
                                 <div class="text-muted" style="font-size: 0.7rem;">Kelas {{ Auth::user()->kelas }}</div>
                             </div>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-xl">
-                            <li>
+
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg dropdown-menu-mobile">
                             @php
                                 $profileRoute = '#';
                                 if(Auth::user()->role === 'admin') {
-                                    $profileRoute = route('profile.edit'); // Route profile umum/admin
+                                    $profileRoute = route('profile.edit');
                                 } elseif(Auth::user()->role === 'guru') {
                                     $profileRoute = route('guru.profile.edit');
                                 } elseif(Auth::user()->role === 'siswa') {
@@ -106,11 +144,14 @@
                                 }
                             @endphp
 
-                            <a class="dropdown-item py-2" href="{{ $profileRoute }}">
-                                <i class="bi bi-person-gear me-2"></i> Profil Saya
-                            </a>
+                            <li>
+                                <a class="dropdown-item py-2" href="{{ $profileRoute }}">
+                                    <i class="bi bi-person-gear me-2"></i> Profil Saya
+                                </a>
                             </li>
+
                             <li><hr class="dropdown-divider"></li>
+
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -122,6 +163,7 @@
                         </ul>
                     </div>
                 </div>
+
             </div>
         </div>
     </nav>
@@ -146,7 +188,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
     @stack('scripts')
 </body>
 </html>
