@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserImportController;
 
 use App\Http\Controllers\Guru\DashboardController as GuruDashboard; 
 use App\Http\Controllers\Guru\MateriController;
@@ -91,10 +92,21 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         //     ->name('users.bulk-toggle-active');
         
         // Import/Export
-        Route::post('users/import', [AdminController::class, 'importUsers'])
-            ->name('users.import');
-        Route::get('users/export', [AdminController::class, 'exportUsers'])
-            ->name('users.export');
+        // Route::post('users/import', [AdminController::class, 'importUsers'])
+        //     ->name('users.import');
+        // Route::get('users/export', [AdminController::class, 'exportUsers'])
+        //     ->name('users.export');
+        // Route Export (Ini yang memperbaiki error Anda)
+        Route::get('users/export', [AdminController::class, 'exportUsers'])->name('users.export');
+        
+        // Route Import (Menggunakan controller baru yang kita buat sebelumnya)
+        Route::post('users/import', [App\Http\Controllers\Admin\UserImportController::class, 'store'])->name('users.import');
+
+        // 2. Baru kemudian Route Resource
+        Route::resource('users', AdminController::class)->except(['create', 'store']);
+
+
+        // Route::post('users/import', [UserImportController::class, 'store'])->name('users.import');
         
         // View All Materi
         Route::get('materi', [AdminController::class, 'allMateri'])

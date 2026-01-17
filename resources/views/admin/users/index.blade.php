@@ -21,7 +21,16 @@
             </a>
         </div>
     </div>
-
+    @if(session('import_errors'))
+    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong class="font-bold">Beberapa baris gagal diimport:</strong>
+        <ul class="mt-2 list-disc list-inside text-sm">
+            @foreach(session('import_errors') as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white py-3" data-bs-toggle="collapse" data-bs-target="#collapseFilter" style="cursor: pointer;">
             <h6 class="m-0 fw-bold text-primary d-flex align-items-center">
