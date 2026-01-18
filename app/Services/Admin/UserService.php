@@ -9,118 +9,121 @@ use Illuminate\Support\Facades\DB;
 class UserService
 {
     /**
-     * Menangani filter dan pencarian user untuk halaman index
+     * Kontrol Logika Pembuatan User Baru
+     */
+    public function createUser(array $data)
+    {
+        return DB::transaction(function () use ($data) {
+            // 1. Enkripsi Password
+            $data['password'] = Hash::make($data['password']);
+            
+            // 2. Set default status aktif jika tidak dipilih
+            $data['is_active'] = $data['is_active'] ?? true;
+
+            // 3. Simpan hanya data yang relevan sesuai Role (Guru/Siswa)
+            return User::create($this->filterDataByRole($data));
+        });
+    }
+
+    /**
+     * Kontrol Logika Update User
+     */
+    public function updateUser(User $user, array $data)
+    {
+        return DB::transaction(function () use ($user, $data) {
+            // 1. Cek apakah password diisi? Jika kosong, hapus dari array agar password lama tidak hilang
+            if (empty($data['password'])) {
+                unset($data['password']);
+            } else {
+                $data['password'] = Hash::make($data['password']);
+            }
+
+            // 2. Update data (menggunakan filter agar data guru tidak masuk ke siswa, dst)
+            $user->update($this->filterDataByRole($data));
+            
+            return $user;
+        });
+    }
+
+    /**
+     * Kontrol Logika Hapus User
+     */
+    public function deleteUser(User $user)
+    {
+        // Proteksi: Admin tidak boleh menghapus dirinya sendiri
+        if ($user->id === auth()->id()) {
+            throw new \Exception("Anda tidak dapat menghapus akun Anda sendiri.");
+        }
+        
+        // Proteksi: Jangan hapus Admin terakhir
+        if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
+             throw new \Exception("Tidak dapat menghapus admin terakhir.");
+        }
+
+        return $user->delete();
+    }
+
+    /**
+     * Logic Filter Pencarian User (Untuk Halaman Index)
      */
     public function getFilteredUsers($request)
     {
         $query = User::query();
 
+        // Filter Role
         if ($request->filled('role')) {
             $query->where('role', $request->role);
         }
 
+        // Filter Kelas (Khusus melihat data Siswa per kelas)
         if ($request->filled('kelas')) {
             $query->where('kelas', $request->kelas);
         }
 
-        if ($request->filled('is_active')) {
-            $query->where('is_active', $request->is_active === '1');
-        }
-
+        // Search Global (Nama, Email, NIP, NISN)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('nisn', 'like', "%{$search}%")
-                  ->orWhere('nip', 'like', "%{$search}%");
+                  ->orWhere('nip', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%");
             });
         }
 
-        $sortBy = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        return $query->latest()->paginate(10)->withQueryString();
+    }
+
+    /**
+     * Helper Penting: Membersihkan field yang tidak perlu.
+     * Contoh: Jika role 'Siswa', maka data 'NIP' atau 'Gaji' tidak akan disimpan meski terkirim.
+     */
+    private function filterDataByRole(array $data)
+    {
+        $role = $data['role'];
         
-        return $query->orderBy($sortBy, $sortDirection)
-                     ->paginate(20)
-                     ->withQueryString();
-    }
+        // Field Dasar (Semua user punya)
+        $commonFields = ['name', 'email', 'password', 'role', 'is_active', 'tempat_lahir', 'tanggal_lahir'];
 
-    /**
-     * Logic membuat user baru dengan pembersihan data
-     */
-    public function createUser(array $data)
-    {
-        return DB::transaction(function () use ($data) {
-            $data['password'] = Hash::make($data['password']);
+        // Field Spesifik Role
+        $roleFields = [
+            'admin' => ['id_pegawai', 'posisi'],
             
-            // Konversi checkbox 'on'/'1' menjadi boolean true/false
-            $data['is_active'] = isset($data['is_active']) && ($data['is_active'] == '1' || $data['is_active'] === true);
-
-            // Bersihkan data yang tidak relevan dengan role yang dipilih
-            if ($data['role'] !== 'siswa') {
-                $data['nisn'] = null;
-                $data['kelas'] = null;
-                // Hapus field siswa dari array
-                unset($data['nis'], $data['tahun_masuk'], $data['nama_ibu'], $data['tanggal_lahir'], $data['jenis_kelamin']); 
-            }
+            'guru'  => [
+                'nip', 'status_kepegawaian', 'pendidikan_terakhir', 
+                'mata_pelajaran_utama', 'wali_kelas', 'jabatan_tambahan'
+            ],
             
-            if ($data['role'] !== 'guru') {
-                $data['nip'] = null;
-                // Hapus field guru dari array
-                unset($data['status_kepegawaian'], $data['mata_pelajaran_utama'], $data['pendidikan_terakhir']);
-            }
-            
-            if ($data['role'] !== 'admin') {
-                // Hapus field admin dari array jika ada
-                unset($data['id_pegawai'], $data['posisi']);
-            }
+            'siswa' => [
+                'nisn', 'nis', 'kelas', 'tahun_masuk', 'jenis_kelamin', 
+                'nama_ibu', 'nama_ayah', 'no_hp_ortu', 'pekerjaan_ortu'
+            ]
+        ];
 
-            return User::create($data);
-        });
-    }
+        // Gabungkan field umum + field khusus role yang dipilih
+        $allowedFields = array_merge($commonFields, $roleFields[$role] ?? []);
 
-    /**
-     * Logic update user
-     */
-    public function updateUser(User $user, array $data)
-    {
-        return DB::transaction(function () use ($user, $data) {
-            // Handle Password: jika kosong, jangan di-update
-            if (!empty($data['password'])) {
-                $data['password'] = Hash::make($data['password']);
-            } else {
-                unset($data['password']);
-            }
-
-            $data['is_active'] = isset($data['is_active']) && ($data['is_active'] == '1' || $data['is_active'] === true);
-
-            // Bersihkan data saat update
-            if ($data['role'] !== 'siswa') {
-                $data['nisn'] = null;
-                $data['kelas'] = null;
-            }
-            if ($data['role'] !== 'guru') {
-                $data['nip'] = null;
-            }
-
-            return $user->update($data);
-        });
-    }
-
-    /**
-     * Logic hapus user dengan validasi safety
-     */
-    public function deleteUser(User $user)
-    {
-        if ($user->id === auth()->id()) {
-            throw new \Exception('Tidak dapat menghapus akun sendiri');
-        }
-
-        // Cek jika user adalah admin dan jumlah admin tinggal 1
-        if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
-            throw new \Exception('Tidak dapat menghapus super admin terakhir');
-        }
-
-        return $user->delete();
+        // Hanya ambil data yang kuncinya ada di $allowedFields
+        return array_intersect_key($data, array_flip($allowedFields));
     }
 }

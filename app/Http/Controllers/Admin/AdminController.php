@@ -132,7 +132,6 @@ class AdminController extends Controller
     // --- BULK ACTION ---
     public function bulkDelete(Request $request)
     {
-        // Validasi tetap simple disini tidak masalah, atau buat FormRequest baru
         $request->validate([
             'user_ids' => ['required', 'array'],
             'user_ids.*' => ['exists:users,id'],
