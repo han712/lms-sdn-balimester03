@@ -80,7 +80,7 @@ read -r
 
 # Step 13: Run Migrations
 echo -e "${YELLOW}[13/15] Running Migrations...${NC}"
-php artisan migrate:fresh --seed
+
 
 # Step 14: Create Storage Link
 echo -e "${YELLOW}[14/15] Creating Storage Link...${NC}"
